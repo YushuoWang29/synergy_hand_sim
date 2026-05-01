@@ -166,7 +166,6 @@ class JointConnection:
     - 峰折(MOUNTAIN): 在板的下表面，即face_a所在平面的下方
     - 谷折(VALLEY):   在板的上表面，即face_a所在平面的上方
     
-    偏移量 = material_thickness / 2
     """
     id: int
     fold_line_id: int
@@ -201,9 +200,8 @@ class OrigamiHandDesign:
     - 根部面片（手掌）
     """
     
-    def __init__(self, name: str = "origami_hand", material_thickness: float = 0.002):
+    def __init__(self, name: str = "origami_hand"):
         self.name = name
-        self.material_thickness = material_thickness
         
         self.fold_lines: dict[int, FoldLine] = {}
         self.faces: dict[int, OrigamiFace] = {}
@@ -361,7 +359,6 @@ class OrigamiHandDesign:
     def summary(self):
         """打印设计摘要"""
         print(f"OrigamiHand: {self.name}")
-        print(f"  Material thickness: {self.material_thickness*1000:.1f} mm")
         print(f"  Fold lines: {len(self.fold_lines)} "
               f"({len(self.get_folds())} folds, {len(self.get_outlines())} outlines)")
         print(f"  Faces: {len(self.faces)}")

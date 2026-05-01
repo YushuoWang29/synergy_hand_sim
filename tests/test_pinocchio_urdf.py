@@ -11,7 +11,7 @@ from pinocchio.visualize import MeshcatVisualizer
 
 
 def main():
-    hand_name = "test_1"
+    hand_name = "test_2"
     urdf_path = os.path.abspath(os.path.join("models", hand_name, f"{hand_name}.urdf"))
     urdf_dir = os.path.dirname(urdf_path)
     mesh_dir = os.path.join(urdf_dir, "meshes")

@@ -520,7 +520,7 @@ class OrigamiParser:
         faces: List[dict]
     ) -> OrigamiHandDesign:
         
-        design = OrigamiHandDesign(name="imported_hand", material_thickness=0.002)
+        design = OrigamiHandDesign(name="imported_hand")
         
         # 建字典：node_id -> Point2D
         node_to_point = {}

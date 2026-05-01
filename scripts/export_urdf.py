@@ -24,6 +24,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("dxf_file")
     parser.add_argument("--tolerance", type=float, default=2.0)
+    parser.add_argument("--thickness", "-t", type=float, default=3.0, help="Material thickness for STL generation (in mm)")
     args = parser.parse_args()
     
     # 从DXF文件名提取手部名称
@@ -43,7 +44,7 @@ def main():
     design.summary()
     
     print(f"\nExporting to: {output_dir}/")
-    export_urdf(design, urdf_path)
+    export_urdf(design, urdf_path, thickness=args.thickness)
     print(f"Done! URDF: {urdf_path}")
 
 

@@ -10,7 +10,8 @@ from .origami_design import (
 
 def compute_joint_frame_in_parent(
     design: OrigamiHandDesign,
-    joint: JointConnection
+    joint: JointConnection,
+    thickness: float = 3.0
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     计算关节轴在"参考面片"局部坐标系中的位姿
@@ -18,7 +19,6 @@ def compute_joint_frame_in_parent(
     这里"参考面片"就是关节所在的2D平面（展开状态）
     """
     fold_line = design.fold_lines[joint.fold_line_id]
-    thickness = design.material_thickness
     
     # 关节轴方向 = 折痕方向，在xy平面内
     d = fold_line.direction
@@ -64,8 +64,9 @@ class OrigamiForwardKinematics:
     4. 重复直到收敛
     """
     
-    def __init__(self, design: OrigamiHandDesign, max_iterations: int = 100, tolerance: float = 1e-6):
+    def __init__(self, design: OrigamiHandDesign, max_iterations: int = 100, tolerance: float = 1e-6, thickness: float = 3.0):
         self.design = design
+        self.thickness = thickness
         self.max_iterations = max_iterations
         self.tolerance = tolerance
         
@@ -74,7 +75,7 @@ class OrigamiForwardKinematics:
         self.joint_axis_dirs: Dict[int, np.ndarray] = {}
         
         for joint in design.joints:
-            axis_point, axis_dir = compute_joint_frame_in_parent(design, joint)
+            axis_point, axis_dir = compute_joint_frame_in_parent(design, joint, thickness)
             self.joint_axis_points[joint.id] = axis_point
             self.joint_axis_dirs[joint.id] = axis_dir
         
