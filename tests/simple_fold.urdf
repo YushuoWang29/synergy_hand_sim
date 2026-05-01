@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot name="simple_fold">
+  <material name="face_material">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+  <link name="face_0">
+    <visual>
+      <geometry>
+        <mesh filename="face_0.stl"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_1">
+    <visual>
+      <geometry>
+        <mesh filename="face_1.stl"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <joint name="joint_0" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_1"/>
+    <origin xyz="2.5 1.5 0.001" rpy="0 0 0"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+</robot>

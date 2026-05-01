@@ -1,0 +1,28 @@
+name: synergy-hand-sim
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  # 核心数值计算
+  - numpy>=1.24
+  - scipy>=1.10
+  - matplotlib>=3.7
+  # 刚体动力学与机器人学
+  - pinocchio>=2.6.0
+  # 碰撞检测
+  - python-fcl>=0.7
+  # 3D可视化（注意：conda的包名是meshcat-python）
+  - meshcat-python>=0.3
+  # Jupyter支持
+  - jupyterlab
+  - ipywidgets
+  # 优化与自动微分
+  - casadi>=3.6
+  # 数据处理
+  - pandas
+  - h5py
+  # 开发工具
+  - pip
+  - ipython
+  - pytest

@@ -1,0 +1,18 @@
+# 可选：更高级的ODE/DAE求解器
+assimulo>=3.5
+
+# URDF解析工具
+urdf-parser-py>=0.0.4
+
+# 科学计算美化输出
+tqdm  # 进度条，长仿真必备
+colorlog  # 彩色日志
+
+# 高级绘图
+seaborn  # 统计可视化
+
+# 代码质量（开发用）
+black
+flake8
+
+ezdxf
