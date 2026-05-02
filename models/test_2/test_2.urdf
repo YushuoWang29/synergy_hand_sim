@@ -84,21 +84,21 @@
     <parent link="face_1"/>
     <child link="face_6"/>
     <origin xyz="0.000000 25.000000 -3.000000" rpy="0 0 0"/>
-    <axis xyz="1.000000 0.000000 0.000000"/>
+    <axis xyz="-1.000000 -0.000000 0.000000"/>
     <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
   </joint>
   <joint name="joint_4" type="revolute">
     <parent link="face_2"/>
     <child link="face_3"/>
     <origin xyz="0.000000 25.000000 -3.000000" rpy="0 0 0"/>
-    <axis xyz="1.000000 0.000000 0.000000"/>
+    <axis xyz="-1.000000 -0.000000 0.000000"/>
     <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
   </joint>
   <joint name="joint_5" type="revolute">
     <parent link="face_4"/>
     <child link="face_5"/>
     <origin xyz="0.000000 25.000000 -3.000000" rpy="0 0 0"/>
-    <axis xyz="1.000000 0.000000 0.000000"/>
+    <axis xyz="-1.000000 -0.000000 0.000000"/>
     <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
   </joint>
 </robot>

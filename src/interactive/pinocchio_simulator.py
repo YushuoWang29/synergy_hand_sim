@@ -112,7 +112,6 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
         
         self.viz = MeshcatVisualizer(self.model, collision_model, self.visual_model)
         self.viz.initViewer(open=True)
-        
         self.viz.loadViewerModel()
         self.viz.display(self.q)
 
