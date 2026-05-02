@@ -50,7 +50,8 @@ class FoldLine:
     start: Point2D
     end: Point2D
     fold_type: FoldType
-    
+    stiffness: float = 1.0  # 可选：折痕的刚度(Nm/rad)
+
     @property
     def length(self) -> float:
         return self.start.distance(self.end)
@@ -270,6 +271,20 @@ class OrigamiHandDesign:
                 return j
         return None
     
+    def get_joint_stiffness_list(self) -> list[float]:
+        """
+        获取所有关节的刚度列表，顺序与 self.joints 一致
+        如果某个关节对应的折痕没有设置刚度，则默认为 1.0
+        用于构建对角刚度矩阵E
+        """
+        stiffmess_values = []
+        for joint in self.joints:
+            fold = self.fold_lines[joint.fold_line_id]
+            if fold:
+                stiffmess_values.append(fold.stiffness)
+            else:
+                stiffmess_values.append(1.0)
+        return stiffmess_values
     # ========= 分析：构建面片树 =========
     
     def build_face_tree(self):
