@@ -162,6 +162,7 @@ class MuJoCoSimulator:
         lines.append('  <compiler angle="radian"/>')
         lines.append('  <option gravity="0 0 0"/>')
         lines.append('  <worldbody>')
+        lines.append('    <geom type="plane" size="500 500 0.1" pos="0 0 -20" rgba="1 1 1 1"/>')
 
         def add_body(name, joint_info=None, indent=4):
             nonlocal joint_names
@@ -185,7 +186,7 @@ class MuJoCoSimulator:
             if mn is not None:
                 # 仅使用一个 geom（group=0 默认可见），STL 内置法线决定正反面
                 lines.append(f'{pf}  <geom type="mesh" mesh="{mn}" pos="0 0 0" '
-                             f'rgba="0.65 0.65 0.7 1.0"/>')
+                             f'rgba="0.6 0.85 1.0 1.0"/>')
 
             if name in children_map:
                 for child_name, ji in children_map[name]:
@@ -225,6 +226,7 @@ class MuJoCoSimulator:
 
         # 关闭重力
         self.model.opt.gravity = (0.0, 0.0, 0.0)
+        self.model.vis.headlight.ambient[:] = (0.5, 0.5, 0.5)
 
         print(f"MuJoCo model loaded: nq={self.model.nq}, nv={self.model.nv}, "
               f"nbody={self.model.nbody}, njnt={self.model.njnt}, "

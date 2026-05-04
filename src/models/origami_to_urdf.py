@@ -18,6 +18,20 @@ def _write_face_stl(face, filepath, offset=(0.0, 0.0), thickness=3.0, top_z=0.0)
     if n < 3:
         return
     
+        # 计算有向面积（2D 叉积和）
+    area = 0.0
+    n = len(vertices)
+    for i in range(n):
+        x1, y1 = vertices[i]
+        x2, y2 = vertices[(i+1) % n]
+        area += x1 * y2 - x2 * y1
+    area *= 0.5
+    
+    # 如果面积为负（顺时针），反转顶点顺序
+    if area < 0:
+        vertices.reverse()
+        print(f"  Reversed vertex order for face (area={area:.2f})")
+        
     top = np.array([[x, y, top_z] for x, y in vertices])
     bottom = np.array([[x, y, top_z - thickness] for x, y in vertices])
     
