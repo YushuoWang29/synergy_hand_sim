@@ -1,8 +1,9 @@
 # src/models/origami_design.py
 
+import json
 import numpy as np
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from enum import Enum
 
 @dataclass
@@ -188,7 +189,28 @@ class JointConnection:
         else:
             return 0
         
+@dataclass
+class Pulley:
+    """滑轮，放置在画布上（可以是折痕上的点）"""
+    id: int
+    position: Point2D
+    radius: float = 3.5
+    friction_coefficient: float = 0.3
+    attached_fold_line_id: Optional[int] = None   # 若放置在折痕上，关联其ID
 
+@dataclass
+class Tendon:
+    """腱绳，依次穿过一系列滑轮/驱动器"""
+    id: int
+    pulley_sequence: List[int]         # 滑轮ID列表（正数），驱动器用负数表示
+
+@dataclass
+class Actuator:
+    """驱动器，控制腱绳两端"""
+    id: int
+    name: str
+    displacement: float = 0.0
+    
 class OrigamiHandDesign:
     """
     完整的折纸手设计
@@ -199,17 +221,26 @@ class OrigamiHandDesign:
     - 所有关节连接（joints）
     - 面片之间的父子关系（face_tree）
     - 根部面片（手掌）
+    - 滑轮、腱绳、驱动器
     """
     
-    def __init__(self, name: str = "origami_hand"):
+    def __init__(self, name: str = "origami_hand", material_thickness: float = 3.0):
         self.name = name
+        self.material_thickness = material_thickness
         
         self.fold_lines: dict[int, FoldLine] = {}
         self.faces: dict[int, OrigamiFace] = {}
         self.joints: list[JointConnection] = []
-        
         self.root_face_id: Optional[int] = None
         self.face_parent: dict[int, int] = {}  # face_id -> parent_face_id
+
+        self.pulleys: dict[int, Pulley] = {}
+        self.tendons: dict[int, Tendon] = {}
+        self.actuators: dict[int, Actuator] = {}
+        self.actuator_positions: List[dict] = []  # [{"type": 0/1, "x": float, "y": float}, ...]
+
+        self.actuators[0] = Actuator(0, "Motor_A")
+        self.actuators[1] = Actuator(1, "Motor_B")
     
     # ========= 添加方法 =========
     
@@ -236,6 +267,16 @@ class OrigamiHandDesign:
             raise ValueError(f"Joint {joint.id}: fold_line {joint.fold_line_id} not found")
         
         self.joints.append(joint)
+
+    def add_pulley(self, pulley: Pulley):
+        if pulley.id in self.pulleys:
+            raise ValueError(f"Pulley {pulley.id} already exists")
+        self.pulleys[pulley.id] = pulley
+
+    def add_tendon(self, tendon: Tendon):
+        if tendon.id in self.tendons:
+            raise ValueError(f"Tendon {tendon.id} already exists")
+        self.tendons[tendon.id] = tendon
     
     def set_root_face(self, face_id: int):
         """设置根部面片（手掌）"""
@@ -270,6 +311,11 @@ class OrigamiHandDesign:
             if {j.face_a_id, j.face_b_id} == {face_id, parent_id}:
                 return j
         return None
+    
+    def get_actuator(self, actuator_id: int) -> Actuator:
+        if actuator_id not in self.actuators:
+            raise ValueError(f"Actuator {actuator_id} not found")
+        return self.actuators[actuator_id]
     
     def get_joint_stiffness_list(self) -> list[float]:
         """
@@ -392,3 +438,125 @@ class OrigamiHandDesign:
             return 1 + depth(self.face_parent[face_id])
         
         return max(depth(fid) for fid in self.faces)
+    
+    def to_dict(self) -> dict:
+        """将设计序列化为字典，便于保存为 JSON"""
+        design_dict = {
+            "name": self.name,
+            "material_thickness": self.material_thickness,
+            "fold_lines": [
+                {
+                    "id": l.id,
+                    "start": {"x": l.start.x, "y": l.start.y},
+                    "end": {"x": l.end.x, "y": l.end.y},
+                    "fold_type": l.fold_type.value,
+                    "stiffness": l.stiffness
+                } for l in self.fold_lines.values()
+            ],
+            "faces": [
+                {
+                    "id": f.id,
+                    "vertices": [{"x": v.x, "y": v.y} for v in f.vertices],
+                    "edge_ids": f.edge_ids
+                } for f in self.faces.values()
+            ],
+            "joints": [
+                {
+                    "id": j.id,
+                    "fold_line_id": j.fold_line_id,
+                    "face_a_id": j.face_a_id,
+                    "face_b_id": j.face_b_id,
+                    "fold_type": j.fold_type.value
+                } for j in self.joints
+            ],
+            "root_face_id": self.root_face_id,
+            "face_parent": self.face_parent,
+            "pulleys": [
+                {
+                    "id": p.id,
+                    "position": {"x": p.position.x, "y": p.position.y},
+                    "radius": p.radius,
+                    "friction_coefficient": p.friction_coefficient,
+                    "attached_fold_line_id": p.attached_fold_line_id
+                } for p in self.pulleys.values()
+            ],
+            "tendons": [
+                {
+                    "id": t.id,
+                    "pulley_sequence": t.pulley_sequence,
+                } for t in self.tendons.values()
+            ],
+            "actuators": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "displacement": a.displacement
+                } for a in self.actuators.values()
+            ],
+            "actuator_positions": self.actuator_positions  # [{"type": 0/1, "x": ..., "y": ...}, ...]
+        }
+        return design_dict
+
+    @classmethod
+    def from_dict(cls, d: dict) -> 'OrigamiHandDesign':
+        """从字典创建设计对象"""
+        design = cls(name=d.get("name", "imported"), material_thickness=d.get("material_thickness", 3.0))
+
+        # 重建折痕线
+        for fl in d.get("fold_lines", []):
+            start = Point2D(fl["start"]["x"], fl["start"]["y"])
+            end = Point2D(fl["end"]["x"], fl["end"]["y"])
+            fold_type = FoldType(fl["fold_type"])
+            stiffness = fl.get("stiffness", 1.0)
+            design.add_fold_line(FoldLine(fl["id"], start, end, fold_type, stiffness))
+
+        # 重建面片
+        for face in d.get("faces", []):
+            vertices = [Point2D(v["x"], v["y"]) for v in face["vertices"]]
+            design.add_face(OrigamiFace(face["id"], vertices, face["edge_ids"]))
+
+        # 重建关节
+        for jnt in d.get("joints", []):
+            design.add_joint(JointConnection(
+                jnt["id"], jnt["fold_line_id"], jnt["face_a_id"], jnt["face_b_id"],
+                FoldType(jnt["fold_type"])
+            ))
+
+        design.root_face_id = d.get("root_face_id")
+        design.face_parent = {int(k): v for k, v in d.get("face_parent", {}).items()}
+        
+        # 重建滑轮
+        for p in d.get("pulleys", []):
+            pos = Point2D(p["position"]["x"], p["position"]["y"])
+            design.add_pulley(Pulley(
+                p["id"], pos, p.get("radius", 3.5),
+                p.get("friction_coefficient", 0.3),
+                p.get("attached_fold_line_id")
+            ))
+
+        # 重建腱绳
+        for t in d.get("tendons", []):
+            design.add_tendon(Tendon(
+                t["id"], t["pulley_sequence"],
+            ))
+
+        # 重建驱动器
+        for a in d.get("actuators", []):
+            design.actuators[a["id"]] = Actuator(a["id"], a["name"], a.get("displacement", 0.0))
+        
+        # 重建驱动器位置
+        design.actuator_positions = d.get("actuator_positions", [])
+
+        return design
+
+    def save(self, filepath: str):
+        """保存为 .ohd 文件 (JSON)"""
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
+
+    @classmethod
+    def load(cls, filepath: str) -> 'OrigamiHandDesign':
+        """从 .ohd 文件加载设计"""
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return cls.from_dict(data)
