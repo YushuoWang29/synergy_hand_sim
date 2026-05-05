@@ -112,11 +112,13 @@ class CadGraphicsScene(QGraphicsScene):
             pos = pulley.position
             ellipse = QtWidgets.QGraphicsEllipseItem(pos.x - rad, pos.y - rad, rad*2, rad*2)
             ellipse.setBrush(QColor(128,128,128))
+            ellipse.setFlag(QGraphicsItem.ItemIsSelectable, True)
             self.addItem(ellipse)
             self._pulleys[ellipse] = pulley
             self._pulley_id = max(self._pulley_id, pid + 1)
 
     def load_tendons(self, tendons: Dict[int, Tendon]):
+        """从数据重建腱绳图元（需在 load_pulleys 和 load_actuators 之后调用）"""
         # 清除旧的腱绳图元
         for lines in self._tendon_graphics.values():
             for line in lines:
@@ -124,6 +126,39 @@ class CadGraphicsScene(QGraphicsScene):
         self._tendon_graphics.clear()
         self._tendons = tendons
         self._tendon_id = max(tendons.keys(), default=-1) + 1
+
+        # 重建图元：遍历每个腱绳，根据 pulley_sequence 中的 ID 找到对应图元，画虚线连接
+        for tid, tendon in self._tendons.items():
+            permanent_lines = []
+            prev_item = None
+            for seq_id in tendon.pulley_sequence:
+                # 找对应的图元 item
+                cur_item = None
+                if seq_id >= 0:
+                    # 正数：滑轮
+                    for item, p in self._pulleys.items():
+                        if p.id == seq_id:
+                            cur_item = item
+                            break
+                else:
+                    # 负数：驱动器，-1 -> A (type 0), -2 -> B (type 1)
+                    for item, (atype, pos) in self._actuator_graphics.items():
+                        if -(atype + 1) == seq_id:
+                            cur_item = item
+                            break
+                if cur_item is None:
+                    continue
+                if prev_item is not None:
+                    line = QtWidgets.QGraphicsLineItem(QLineF(
+                        prev_item.sceneBoundingRect().center(),
+                        cur_item.sceneBoundingRect().center()))
+                    line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+                    line.setFlag(QGraphicsItem.ItemIsSelectable, True)
+                    self.addItem(line)
+                    permanent_lines.append(line)
+                prev_item = cur_item
+            if permanent_lines:
+                self._tendon_graphics[tid] = permanent_lines
 
     def load_actuators(self, actuator_positions: list):
         """从保存的位置列表加载驱动器图元"""
@@ -350,6 +385,7 @@ class CadGraphicsScene(QGraphicsScene):
         rad = 5
         ellipse = QtWidgets.QGraphicsEllipseItem(final_pos.x() - rad, final_pos.y() - rad, rad*2, rad*2)
         ellipse.setBrush(QColor(128,128,128))
+        ellipse.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.addItem(ellipse)
         pulley = Pulley(
             id=self._pulley_id,
@@ -384,6 +420,7 @@ class CadGraphicsScene(QGraphicsScene):
                         prev.sceneBoundingRect().center(),
                         item.sceneBoundingRect().center()))
                     line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+                    line.setFlag(QGraphicsItem.ItemIsSelectable, True)
                     self.addItem(line)
                     self._tendon_temp_lines.append(line)
 
@@ -411,6 +448,7 @@ class CadGraphicsScene(QGraphicsScene):
         permanent_lines = []
         for line in self._tendon_temp_lines:
             line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+            line.setFlag(QGraphicsItem.ItemIsSelectable, True)
             permanent_lines.append(line)
         self._tendon_graphics[self._tendon_id] = permanent_lines
 
@@ -458,9 +496,15 @@ class CadGraphicsScene(QGraphicsScene):
     def _select_click(self, pos):
         items = self.items(pos)
         for item in items:
-            if isinstance(item, QtWidgets.QGraphicsLineItem) and item in self._lines:
-                self._select_line(item)
-                return
+            if isinstance(item, QtWidgets.QGraphicsLineItem):
+                if item in self._lines:
+                    self._select_line(item)
+                    return
+                # 检查是否为腱绳图元
+                tendon_id = self._find_tendon_id_by_line(item)
+                if tendon_id is not None:
+                    self._select_tendon(item)
+                    return
             if isinstance(item, QtWidgets.QGraphicsEllipseItem):
                 if item in self._pulleys:
                     self._select_pulley(item)
@@ -469,6 +513,13 @@ class CadGraphicsScene(QGraphicsScene):
                     self._select_actuator(item)
                     return
         self._select_none()
+
+    def _find_tendon_id_by_line(self, line_item):
+        """查找腱绳图元所属的 tendon_id"""
+        for tid, lines in self._tendon_graphics.items():
+            if line_item in lines:
+                return tid
+        return None
 
     def _select_line(self, item):
         for it in self._lines:
@@ -507,6 +558,20 @@ class CadGraphicsScene(QGraphicsScene):
         for it in self._pulleys: it.setSelected(False)
         for it in self._actuator_graphics: it.setSelected(False)
 
+    def _select_tendon(self, item):
+        """选中腱绳（高亮其所属整条腱绳的所有线段）"""
+        tendon_id = self._find_tendon_id_by_line(item)
+        if tendon_id is None:
+            return
+        # 取消所有其他选中
+        for it in self._lines: it.setSelected(False)
+        for it in self._pulleys: it.setSelected(False)
+        for it in self._actuator_graphics: it.setSelected(False)
+        # 高亮整条腱绳
+        for line in self._tendon_graphics[tendon_id]:
+            line.setSelected(True)
+        self.line_selected.emit(-1)  # 复用 line_selected，传递-1表示腱绳
+
     def _delete_selected_lines(self):
         for item in list(self.selectedItems()):
             if isinstance(item, QtWidgets.QGraphicsLineItem) and item in self._lines:
@@ -517,6 +582,15 @@ class CadGraphicsScene(QGraphicsScene):
             elif isinstance(item, QtWidgets.QGraphicsEllipseItem) and item in self._pulleys:
                 del self._pulleys[item]
                 self.removeItem(item)
+            elif isinstance(item, QtWidgets.QGraphicsLineItem):
+                # 检查是否为腱绳图元
+                tendon_id = self._find_tendon_id_by_line(item)
+                if tendon_id is not None:
+                    # 删除整条腱绳的所有图元和数据
+                    for line in self._tendon_graphics[tendon_id]:
+                        self.removeItem(line)
+                    del self._tendon_graphics[tendon_id]
+                    del self._tendons[tendon_id]
 
     def _remove_line_item(self, item):
         if item in self._lines:

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot name="ohd_1">
+  <material name="face_material">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+  <link name="face_0">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_0.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_1">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_1.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_2">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_2.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <joint name="joint_0" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_1"/>
+    <origin xyz="25.000000 50.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_1" type="revolute">
+    <parent link="face_1"/>
+    <child link="face_2"/>
+    <origin xyz="0.000000 50.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+</robot>

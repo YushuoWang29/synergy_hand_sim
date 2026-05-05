@@ -179,10 +179,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.design = OrigamiHandDesign.load(path)
             self.scene.clear_lines()
             self.scene.load_lines(list(self.design.fold_lines.values()))
-            # 加载滑轮、腱绳、驱动器
+            # 加载滑轮、驱动器、腱绳（注意顺序：腱绳依赖前两者已加载）
             self.scene.load_pulleys(self.design.pulleys)
-            self.scene.load_tendons(self.design.tendons)
             self.scene.load_actuators(self.design.actuator_positions)
+            self.scene.load_tendons(self.design.tendons)
             if self.design.fold_lines:
                 self.scene._next_line_id = max(self.design.fold_lines.keys(), default=-1) + 1
         except Exception as e:

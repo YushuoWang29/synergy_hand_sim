@@ -1,6 +1,6 @@
 # synergy_hand_sim
 
-**折纸手设计仿真工具包** — 从CAD图纸(DXF)到3D交互式折纸仿真的完整流程，支持 URDF 导出与 Pinocchio 机器人学库集成。
+**折纸手设计仿真工具包** — 从CAD图纸(DXF)到3D交互式折纸仿真的完整流程，支持 URDF 导出、Pinocchio 机器人学库集成，以及**增强自适应协同 (Augmented Adaptive Synergy)** 交互式仿真。
 
 ---
 
@@ -11,8 +11,11 @@
 - [项目文件结构](#项目文件结构)
 - [各文件详细说明](#各文件详细说明)
 - [文件间调用关系](#文件间调用关系)
+- [增强自适应协同 (Augmented Adaptive Synergy)](#增强自适应协同-augmented-adaptive-synergy)
 - [测试数据](#测试数据)
+- [Origami CAD 编辑器](#origami-cad-编辑器-srcorigami_cad)
 - [用法示例](#用法示例)
+- [DXF 绘图规范](#dxf-绘图规范)
 
 ---
 
@@ -36,6 +39,7 @@ conda activate synergy_hand_sim
 | `meshcat-python` | 3D浏览器端可视化 |
 | `pinocchio` | 机器人学库 (URDF加载与运动学) |
 | `PySide6` | Qt6绑定 (与PyQt5可选) |
+| `mujoco` | 物理引擎 (增强协同交互式仿真) |
 
 ---
 
@@ -59,10 +63,20 @@ python scripts/export_urdf.py tests/test_hand.dxf --thickness 3.0
 python scripts/run_pinocchio_simulator.py models/test_2/test_2.urdf
 ```
 
-### 4. DXF 诊断
+### 4. 增强自适应协同仿真 (从 .ohd 文件)
 
 ```bash
-python scripts/diagnose_dxf.py tests/test_hand.dxf
+# 先导出 URDF
+python scripts/export_urdf.py "models/ohd test/ohd_2.dxf" --thickness 3.0
+
+# 再启动增强协同仿真
+python scripts/run_synergy_from_ohd.py "models/ohd test/ohd_2.ohd"
+```
+
+### 5. MuJoCo 直接仿真
+
+```bash
+python scripts/run_mujoco_simulator.py models/ohd_2/ohd_2.urdf
 ```
 
 ---
@@ -79,47 +93,58 @@ synergy_hand_sim/
 ├── scripts/                      # 入口脚本
 │   ├── run_origami_simulator.py      # 主入口：交互式折纸仿真器启动脚本
 │   ├── run_pinocchio_simulator.py    # Pinocchio URDF 交互式仿真器启动脚本
+│   ├── run_mujoco_simulator.py       # MuJoCo 直接 URDF 仿真器
 │   ├── export_urdf.py                # URDF导出脚本：DXF → URDF + STL
-│   └── diagnose_dxf.py               # 诊断工具：分析DXF文件的面片识别情况
+│   ├── run_synergy_from_ohd.py       # 增强协同仿真：从 .ohd 加载 → MuJoCo 四滑块交互
+│   ├── synergy_mujoco_demo.py        # 协同模型测试脚本
+│   ├── diagnose_dxf.py               # 诊断工具：分析DXF文件的面片识别情况
+│   └── run_cad.py                    # CAD 图形化编辑器启动脚本
 │
 ├── src/                          # 核心源码
 │   ├── __init__.py
 │   │
 │   ├── models/                   # 数据模型与算法
-│   │   ├── origami_design.py         # 数据模型：折纸手设计的核心数据结构
+│   │   ├── origami_design.py         # 数据模型：折纸手设计的核心数据结构（含滑轮、腱绳、驱动器）
 │   │   ├── origami_kinematics.py     # 运动学：3D正向运动学计算（支持环状结构）
 │   │   ├── origami_parser.py         # 解析器：从DXF文件生成OrigamiHandDesign
-│   │   └── origami_to_urdf.py        # URDF导出：将设计导出为URDF+STL格式
+│   │   ├── origami_to_urdf.py        # URDF导出：将设计导出为URDF+STL格式
+│   │   └── transmission_builder.py   # 传动矩阵构建：R 和 R_f 矩阵，论文公式实现
+│   │
+│   ├── synergy/                  # 增强自适应协同模块
+│   │   ├── base_adaptive.py          # 基础自适应协同模型 (AdaptiveSynergyModel)
+│   │   └── augmented_adaptive.py     # 增强自适应协同模型 (AugmentedAdaptiveSynergyModel)
 │   │
 │   ├── visualization/            # 3D可视化
 │   │   └── origami_visualizer.py     # 3D可视化：MeshCat浏览器端渲染
 │   │
-│   └── interactive/              # 交互式GUI
-│       ├── cad_viewer.py             # 2D视图：matplotlib CAD图纸预览与交互
-│       ├── origami_simulator.py      # 自研运动学仿真器：Qt GUI，整合2D+3D交互
-│       └── pinocchio_simulator.py    # Pinocchio仿真器：基于URDF的交互式仿真
+│   ├── interactive/              # 交互式GUI
+│   │   ├── cad_viewer.py             # 2D视图：matplotlib CAD图纸预览与交互
+│   │   ├── mujoco_simulator.py       # MuJoCo 仿真器：支持协同回调模式与四滑块互联动
+│   │   ├── origami_simulator.py      # 自研运动学仿真器：Qt GUI，整合2D+3D交互
+│   │   └── pinocchio_simulator.py    # Pinocchio仿真器：基于URDF的交互式仿真
+│   │
+│   └── origami_cad/              # CAD 图形化编辑器
+│       ├── cad_graphics_scene.py     # QGraphicsScene 核心
+│       ├── cad_graphics_view.py      # QGraphicsView 交互
+│       ├── main_window.py            # 主窗口
+│       └── property_panel.py         # 属性面板
 │
 ├── models/                       # 导出的URDF模型
+│   ├── ohd_2/                        # ohd_2 设计（路由a）的URDF+STL
+│   ├── ohd_3/                        # ohd_3 设计（路由b）的URDF+STL
+│   ├── ohd_1/
 │   ├── test_1/
-│   │   ├── test_1.urdf
-│   │   └── meshes/                   # STL几何文件
-│   └── test_2/
-│       ├── test_2.urdf
-│       └── meshes/
+│   ├── test_2/
+│   ├── test_3/
+│   ├── test_4/
+│   └── ohd test/                     # .ohd 设计源文件
 │
 ├── tests/                        # 测试文件
-│   ├── __init__.py
-│   ├── test_hand.dxf                 # 测试用DXF（手掌+两节手指）
-│   ├── test_1.dxf                    # 简单折纸DXF
-│   ├── test_2.dxf / test_2.dwg      # 多关节折纸设计
-│   ├── simple_fold.urdf              # 简单对折URDF（测试导出）
-│   ├── test_origami_design.py        # 数据结构单元测试
-│   ├── test_origami_kinematics.py    # 运动学单元测试
-│   ├── test_visualize_origami.py     # 可视化测试
-│   ├── test_cad_import.py            # DXF导入端到端测试
-│   └── test_pinocchio_urdf.py        # Pinocchio URDF加载测试
+│   ├── test_adaptive_synergy.py      # 基础协同模型测试
+│   ├── test_augmented_synergy.py     # 增强协同模型测试
+│   └── ... (其他测试文件)
 │
-└── test_2_dxf.txt / test_2_urdf.txt  # 诊断输出记录
+└── notebooks/                    # Jupyter notebooks
 ```
 
 ---
@@ -136,10 +161,13 @@ synergy_hand_sim/
 |---|---|
 | `Point2D` | 二维点，支持距离计算、向量运算、哈希、等值比较 |
 | `FoldType` | 枚举：`MOUNTAIN`（峰折）、`VALLEY`（谷折）、`OUTLINE`（轮廓） |
-| `FoldLine` | 一条折痕线：记录起点、终点、类型、长度、方向向量、法向量、中点 |
+| `FoldLine` | 一条折痕线：记录起点、终点、类型、长度、方向向量、法向量、中点、刚度 |
 | `OrigamiFace` | 一个面片：由顶点序列和边ID序列定义的封闭多边形，含面积计算、点包含判断 |
 | `JointConnection` | 关节连接：记录两个面片通过某条折痕形成旋转关节的关系，含关节偏移方向 |
-| `OrigamiHandDesign` | 顶层容器：管理所有折痕线、面片、关节，支持面片树构建（BFS）、完整性验证、摘要输出 |
+| `Pulley` | 滑轮：id、位置、半径、摩擦系数、关联折痕ID |
+| `Tendon` | 腱绳：id、滑轮/驱动器 ID 序列（正数=滑轮，负数=驱动器(A=-1,B=-2)） |
+| `Actuator` | 驱动器控制器：id、名称、位移 |
+| `OrigamiHandDesign` | 顶层容器：管理所有折痕线、面片、关节、滑轮、腱绳、驱动器，支持面片树构建（BFS）、完整性验证、摘要输出、JSON序列化 |
 
 **无外部依赖**（仅依赖 `numpy` 和 Python 标准库）。
 
@@ -182,7 +210,7 @@ synergy_hand_sim/
 
 ### 4. `src/models/origami_to_urdf.py` — URDF导出层
 
-**功能**：将折纸手设计导出为标准URDF+STL格式，可供Pinocchio等机器人学库加载。
+**功能**：将折纸手设计导出为标准URDF+STL格式，可供Pinocchio、MuJoCo等物理引擎加载。
 
 **依赖**：`origami_design.py`
 
@@ -196,92 +224,75 @@ synergy_hand_sim/
 
 ---
 
-### 5. `src/visualization/origami_visualizer.py` — 3D可视化层
+### 5. `src/models/transmission_builder.py` — 传动矩阵构建
 
-**功能**：在浏览器中实时渲染折纸手的3D折叠状态。
+**功能**：从 `OrigamiHandDesign` 中自动提取传动矩阵 R 和 R_f，实现 Della Santina et al. (2018) 论文中的增强自适应协同模型。
 
-**依赖**：`origami_kinematics.py`、`meshcat`
+**依赖**：`origami_design.py`
 
-**包含的类**：
+**包含的函数**：
 
-| 类 | 说明 |
+| 函数 | 说明 |
 |---|---|
-| `OrigamiVisualizer` | MeshCat可视化器：<br>• `display_hand(fk, joint_angles)`：显示给定关节角度下的手部姿态（三角化面片+颜色区分）<br>• `animate_folding(fk, joint_id, start, end, steps)`：动画展示单个关节的折叠过程<br>• `open_browser()`：在默认浏览器中打开可视化页面<br>• `set_camera_position(position, lookat)`：设置相机位置<br>• `auto_set_camera(fk, margin)`：根据几何自动调整相机 |
+| `get_joint_list(design)` | 从设计中提取所有关节，保留原始 fold line ID，确保 pulley→fold_line→joint 映射完整 |
+| `compute_R(design)` | 计算基础传动矩阵 R ($k \times n$)，按论文公式(31)对每个关节求和所有关联滑轮半径 |
+| `compute_Rf(design)` | 计算摩擦滑动传动矩阵 R_f ($m \times n$)，按论文公式(20)/(25)/(32)：<br>`R_f^T = -AR^T M^{-1} V_{max} e_v`<br>自动适应任意滑轮数量和路径顺序 |
+| `build_synergy_model(design)` | 从设计构建完整的 `AugmentedAdaptiveSynergyModel` 实例 |
+
+**关键特性**：
+- R_f 计算通过动态构建 $(m+1) \times (m+1)$ 的速度耦合矩阵 M 和摩擦对角阵 V_max，**无需置换矩阵 P**，因为 `pulley_sequence` 已经自然编码了路径顺序信息
+- **完全通用**：适应任意数量的肌腱、滑轮、关节，不限于三指案例
 
 ---
 
-### 6. `src/interactive/cad_viewer.py` — 2D交互视图层
+### 6. `src/synergy/augmented_adaptive.py` — 增强自适应协同模型
 
-**功能**：提供CAD图纸的2D预览，支持鼠标点击选折痕。
+**功能**：实现 Augmented Adaptive Synergy 模型，在基础 adaptive synergy ($\sigma$) 之上添加肌腱滑动摩擦产生的第二个协同输入 $\sigma_f$。
 
-**依赖**：`origami_design.py`、`matplotlib`（Qt5Agg后端）
+**依赖**：`base_adaptive.py`
 
-**包含的类**：
+**类 `AugmentedAdaptiveSynergyModel`**：
 
-| 类 | 说明 |
+| 方法 | 说明 |
 |---|---|
-| `CADViewer` | matplotlib 2D视图：<br>• `_init_plot`：绘制面片半透明填充 + 折痕线（红=峰、蓝=谷、黑=轮廓）+ 面片编号 + 图例<br>• `_on_click`：计算点击点到各折痕的屏幕距离，选中最近的<br>• `_select_line(line_id)`：高亮选中的折痕（变绿加粗），触发回调<br>• `set_select_callback(callback)`：注册选中回调 |
+| `__init__(n_joints, R, R_f, E_vec)` | 堆叠 R 和 R_f 为 R_aug，预计算 S_aug（主动协同矩阵）和 C_aug（被动柔顺矩阵） |
+| `solve(sigma, sigma_f, J, f_ext)` | 计算关节角 q = S_aug @ [sigma, sigma_f]^T + C_aug @ J^T @ f_ext |
+
+**核心公式**（论文 Eq. 23）：
+$$
+q = \begin{bmatrix} R \\ R_f \end{bmatrix}^+_E \begin{bmatrix} \sigma \\ \sigma_f \end{bmatrix} + P^\perp_{R,R_f} E^{-1} J^T f_{ext}
+$$
 
 ---
 
-### 7. `src/interactive/origami_simulator.py` — 自研运动学仿真器
+### 7. `src/synergy/base_adaptive.py` — 基础自适应协同模型
 
-**功能**：整合2D视图和3D可视化的Qt GUI窗口，使用自研正向运动学引擎。
+**功能**：实现 Grioli et al. (2012) 的基础自适应协同求解器。
 
-**依赖**：`origami_design.py`、`origami_kinematics.py`、`origami_visualizer.py`、`cad_viewer.py`、`PyQt5`、`matplotlib`
+**类 `AdaptiveSynergyModel`**：
 
-**包含的类**：
-
-| 类 | 说明 |
+| 方法 | 说明 |
 |---|---|
-| `OrigamiSimulator(QtWidgets.QMainWindow)` | 主窗口：<br>• **左侧面板**：嵌入`CADViewer`的2D视图 + matplotlib工具栏<br>• **右侧面板**：选中信息显示、角度滑块（-90°~+90°）、精确输入框、所有关节状态列表、重置按钮、快捷键提示<br>• **定时器**：每50ms检查角度变化，自动刷新3D视图<br>• **键盘交互**：↑↓±5°、←→±1°、Enter应用、R重置、Esc取消选中<br>• **内部状态**：维护`joint_angles`字典，连接折痕ID与关节ID的映射 |
+| `__init__(n_joints, R, E_vec)` | 预计算协同矩阵 S 和柔顺矩阵 C |
+| `solve(sigma, J, f_ext)` | 求解 q = S @ sigma + C @ J^T @ f_ext |
 
 ---
 
-### 8. `src/interactive/pinocchio_simulator.py` — Pinocchio URDF仿真器
+### 8. `src/interactive/mujoco_simulator.py` — MuJoCo 仿真器
 
-**功能**：基于Pinocchio的交互式URDF仿真器，加载预导出的URDF+STL模型，使用Pinocchio进行运动学计算和3D渲染。
+**功能**：基于 MuJoCo 的交互式 URDF 仿真器，支持**协同回调模式**和**四滑块互联动**。
 
-**依赖**：`origami_design.py`、`cad_viewer.py`、`pinocchio`、`PyQt5`、`matplotlib`
+**依赖**：`mujoco`
 
-**包含的类**：
+**类 `MuJoCoSimulator`**：
 
-| 类 | 说明 |
+| 方法/特性 | 说明 |
 |---|---|
-| `PinocchioSimulator(QtWidgets.QMainWindow)` | 主窗口：<br>• **左侧面板**：`CADViewer` 2D视图，点击折痕选中对应Pinocchio关节<br>• **右侧面板**：角度滑块（-180°~+180°）、精确输入框、关节状态列表、重置按钮<br>• **3D视图**：MeshCat浏览器端渲染，Pinocchio实时更新<br>• `_load_model`：加载URDF，处理相对mesh路径为绝对路径<br>• `_init_3d_view`：初始化MeshCatVisualizer<br>• **折痕→Pinocchio关节映射**：通过URDF joint name `joint_{id}` 建立关联<br>• **定时器**：每50ms检查配置向量变化，自动刷新3D视图 |
-
----
-
-### 9. `scripts/export_urdf.py` — URDF导出脚本
-
-**功能**：将DXF文件解析后导出为URDF+STL格式，输出到 `models/<hand_name>/` 目录。
-
-**用法**：
-```bash
-python scripts/export_urdf.py tests/test_hand.dxf --tolerance 2.0 --thickness 3.0
-```
-
-**参数**：
-- `dxf_file`：输入DXF路径
-- `--tolerance`：点合并容差（默认2.0mm）
-- `--thickness, -t`：材料厚度（默认3.0mm）
-
----
-
-### 10. `scripts/run_pinocchio_simulator.py` — Pinocchio仿真器启动脚本
-
-**功能**：启动基于Pinocchio的交互式URDF仿真器。
-
-**用法**：
-```bash
-python scripts/run_pinocchio_simulator.py models/test_2/test_2.urdf
-python scripts/run_pinocchio_simulator.py models/test_2/test_2.urdf --dxf tests/test_2.dxf
-```
-
-**参数**：
-- `urdf_file`：URDF文件路径
-- `--dxf`：DXF文件路径（可选，不指定则自动推断）
-- `--tolerance`：DXF解析容差（默认2.0mm）
+| `__init__(urdf_path, mesh_dir, synergy_callback, synergy_motor_names, ctrl_range_deg, synergy_with_sigma_sliders)` | 将 URDF 转换为 MJCF XML，创建 dummy slider joints + kp=0 actuators 承载滑块控制 |
+| `run()` | 主循环：读取滑块 ctrl → 互联动计算 → 调用 synergy_callback 求关节角 → 设置 qpos → `mj_forward` → `viewer.sync()` |
+| 四滑块模式 | `synergy_with_sigma_sliders=True` 时创建 4 个滑块：Motor A, Motor B, σ, σ_f |
+| 滑块互联动 | 检测用户拖动的滑块对（A/B 或 σ/σ_f），自动计算另一对的值，保持同步 |
+| 直接模式 | `synergy_callback=None` 时直接复制 ctrl → qpos |
 
 ---
 
@@ -303,14 +314,11 @@ run_origami_simulator.py
             │       └── 迭代松弛（_resolve_cycles）
             │
             ├──▶ CADViewer(design)              [左侧2D面板]
-            │       └── 使用 design.fold_lines, design.faces
             │
             ├──▶ OrigamiVisualizer()            [3D浏览器]
             │       └── display_hand(fk, joint_angles)
-            │               └──▶ fk.get_face_vertices_world(joint_angles)
             │
             └──▶ 定时器驱动 _update_3d()
-                    └──▶ viz.display_hand(fk, joint_angles)
 ```
 
 ### Pinocchio URDF 仿真器
@@ -319,57 +327,99 @@ run_origami_simulator.py
 run_pinocchio_simulator.py
     │
     ├──▶ OrigamiParser.parse(dxf_path)     [仅用于2D视图]
-    │       └──▶ OrigamiHandDesign
     │
     └──▶ PinocchioSimulator(design, urdf_path, mesh_dir)
-            │
             ├──▶ pin.buildModelFromUrdf(urdf)
-            ├──▶ pin.buildGeomFromUrdf(...)   [加载STL几何]
-            │
-            ├──▶ CADViewer(design)            [左侧2D面板]
-            │       └── 折痕点击 → 映射到Pinocchio joint index
-            │
-            ├──▶ MeshcatVisualizer            [3D浏览器]
-            │       └── viz.display(q)        [Pinocchio实时计算]
-            │
-            └──▶ 定时器驱动 _update_3d()
-                    └──▶ viz.display(q)
+            ├──▶ CADViewer(design)
+            └──▶ MeshcatVisualizer.display(q)
 ```
 
-### URDF 导出流程
+### 增强自适应协同仿真（核心新功能）
 
 ```
-export_urdf.py
+run_synergy_from_ohd.py
     │
-    ├──▶ OrigamiParser.parse(dxf_path)
-    │       └──▶ OrigamiHandDesign
+    ├──▶ OrigamiHandDesign.load(ohd_path)
+    │       └── 加载滑轮、腱绳、驱动器信息
     │
-    └──▶ export_urdf(design, output_path, thickness)
-            ├── 确定每个link的原点（折痕对齐法）
-            ├── 生成每个面片的STL二进制文件
-            └── 生成URDF XML（link + revolute joint）
+    ├──▶ build_urdf_to_synergy_mapping(urdf_path, design, ohd_path)
+    │       ├── 最近邻空间匹配：URDF关节世界坐标 ↔ fold_line中点 ↔ synergy索引
+    │       └── 返回 {urdf_joint_name: synergy_index} 映射字典
+    │
+    ├──▶ build_synergy_model(design)
+    │       ├──▶ compute_R(design)           # 基础传动矩阵
+    │       ├──▶ compute_Rf(design)          # 摩擦滑动传动矩阵
+    │       └──▶ AugmentedAdaptiveSynergyModel(n, R, Rf, E)
+    │
+    └──▶ MuJoCoSimulator(urdf_path, mesh_dir,
+                          synergy_callback, synergy_motor_names,
+                          ctrl_range_deg, synergy_with_sigma_sliders)
+            └── run()
+                └── 每帧：ctrl滑块 → 互联动 → synergy_callback → qpos → mj_forward → sync
 ```
 
 ### 数据流向
 
 ```
-DXF文件 ──▶ OrigamiParser ──▶ OrigamiHandDesign ──▶ OrigamiForwardKinematics
-(CAD图纸)                                                   │
-                                                      OrigamiVisualizer (3D)
-                                                            │
-                                                      CADViewer (2D)
-                                                            │
-                                          ┌─────────────────┴─────────────────┐
-                                          ▼                                   ▼
-                                   OrigamiSimulator                export_urdf()
-                                  (自研运动学GUI)                        │
-                                                                        ▼
-                                                               URDF + STL 文件
-                                                                        │
-                                                                        ▼
-                                                          PinocchioSimulator
-                                                          (Pinocchio URDF GUI)
+DXF文件 ──▶ OrigamiParser ──▶ OrigamiHandDesign
+(CAD图纸)       │                          │
+                 │                          ├──▶ export_urdf() → URDF + STL
+                 │                          │               │
+                 │                          │               ├──▶ PinocchioSimulator
+                 │                          │               └──▶ MuJoCoSimulator
+                 │                          │
+                 │                          ├──▶ transmission_builder.py
+                 │                          │       ├── compute_R()    → R 矩阵
+                 │                          │       └── compute_Rf()   → Rf 矩阵
+                 │                          │
+                 │                          └──▶ AugmentedAdaptiveSynergyModel
+                 │                                    └── solve(sigma, sigma_f) → q
+                 │
+                 └──▶ OrigamiSimulator (自研运动学)
+
+.ohd文件 ──▶ OrigamiHandDesign.load()
+(JSON)         │
+                ├──▶ build_urdf_to_synergy_mapping()
+                ├──▶ build_synergy_model()
+                └──▶ MuJoCoSimulator(synergy_callback)
+                        └── run() → 实时交互仿真
 ```
+
+---
+
+## 增强自适应协同 (Augmented Adaptive Synergy)
+
+### 论文背景
+
+实现 Della Santina et al., *"Toward Dexterous Manipulation With Augmented Adaptive Synergies: The Pisa/IIT SoftHand 2"*, IEEE TRO 2018。
+
+### 核心思想
+
+在腱绳驱动系统中，利用**库仑摩擦**作为第二驱动通道。当两台电机同向运动时，腱绳缩短，所有手指同时闭合（第一协同方向 $\sigma$）。当电机反向运动时，腱绳在滑轮间滑动，摩擦力引起张力阶梯分布，驱动部分手指打开、部分闭合（第二协同方向 $\sigma_f$）。
+
+### 两个协同方向
+
+| 输入 | 物理意义 | 效果 |
+|---|---|---|
+| $\sigma = (\theta_1 + \theta_2)/2$ | 同动量 | 所有手指同步闭合/打开 |
+| $\sigma_f = (\theta_1 - \theta_2)/2$ | 差动量 | 手指间的相对运动 |
+
+### 改变腱绳路径（Routing）的影响
+
+- 基础传动矩阵 **R 不变**：仅取决于滑轮半径分布
+- 摩擦传动矩阵 **R_f 变化**：取决于腱绳穿过的滑轮顺序（路径 permutation 矩阵 P）
+- 因此，通过改变路径可独立设计第二协同方向，无需修改机械结构
+
+### 验证案例
+
+`models/ohd test/` 目录包含具有不同路由的 3 指 6 关节设计：
+
+| 文件 | 路由 | 预期行为 |
+|---|---|---|
+| `ohd_2.ohd` | 路由 (a) | 第二协同：左手（拇指+中指指根）主导打开 |
+| `ohd_3.ohd` | 路由 (b) | 第二协同：中间手指主导打开 |
+
+两种路由的 **R 相同**（均为 `[7,7,7,7,7,7]`），但 **R_f 不同**（值在关节间重排），验证了论文公式(31)-(36)的理论预测。
 
 ---
 
@@ -380,27 +430,84 @@ DXF文件 ──▶ OrigamiParser ──▶ OrigamiHandDesign ──▶ OrigamiF
 | `tests/test_hand.dxf` | **主测试文件**：手掌(50×30) + 近端手指 + 远端手指，含谷折关节 |
 | `tests/test_1.dxf` | 简单折纸设计 |
 | `tests/test_2.dxf` | 多关节折纸设计（含DWG格式源文件） |
-| `models/test_1/` | test_1的导出URDF+STL |
-| `models/test_2/` | test_2的导出URDF+STL（含6个关节） |
+| `models/ohd test/ohd_1.ohd` | 单指设计 (测试用) |
+| `models/ohd test/ohd_2.ohd` | 三指设计 - 路由 (a)，含滑轮、腱绳、驱动器 |
+| `models/ohd test/ohd_3.ohd` | 三指设计 - 路由 (b)，路径顺序与 ohd_2 不同 |
+| `models/ohd_2/ohd_2.urdf` | ohd_2 的导出 URDF+STL |
+| `models/ohd_3/ohd_3.urdf` | ohd_3 的导出 URDF+STL |
 
-### 运行测试
+---
+
+## Origami CAD 编辑器 (`src/origami_cad/`)
+
+**功能**：基于 PyQt5 的图形化 CAD 编辑器，用于可视化的折纸手设计。支持折线绘制、滑轮/腱绳/驱动器放置与编辑，保存为 `.ohd` 格式。
+
+### 启动
 
 ```bash
-# 数据结构测试
-python tests/test_origami_design.py
-
-# 运动学测试
-python tests/test_origami_kinematics.py
-
-# DXF导入端到端测试（生成DXF → 解析 → 可视化）
-python tests/test_cad_import.py
-
-# 可视化测试
-python tests/test_visualize_origami.py
-
-# Pinocchio URDF加载测试
-python tests/test_pinocchio_urdf.py
+python scripts/run_cad.py
 ```
+
+### 绘图模式
+
+| 快捷键 | 工具栏按钮 | 模式 | 操作方式 |
+|---|---|---|---|
+| `L` | 轮廓线 | 绘制黑色轮廓线 | 输入 `x,y` 坐标或鼠标点击 → 再输入/点击终点 |
+| `M` | 峰折 | 绘制红色峰折线 | 同上 |
+| `V` | 谷折 | 绘制蓝色谷折线 | 同上 |
+| `P` | 滑轮 | 放置灰色滑轮(半径5px) | 输入 `x,y` 坐标或鼠标点击，自动吸附到最近折痕线 |
+| `T` | 腱绳 | 连接滑轮/驱动器的虚线路径 | 依次点击滑轮或驱动器 → 连续创建灰色虚线连接段 → **右键完成并保存** |
+| `A` | 驱动器 | 放置驱动器点 | 输入 `x,y` 坐标或鼠标点击，默认蓝色(A型) |
+| `Esc` | - | 退出当前模式 / 取消选择 | - |
+| `Del` | 删除选中 | 删除选中的折线/滑轮/驱动器 | - |
+
+### 属性编辑
+
+选中图元后，右侧属性面板显示对应编辑控件：
+
+- **折线**：显示 ID、类型（轮廓/峰折/谷折），可编辑**刚度**(N·m/rad)；轮廓线刚度控件禁用
+- **滑轮**：显示 ID、关联折痕(若有)，可编辑**摩擦系数**(0~1.0) 和**半径**(2.0~10.0)
+- **驱动器**：显示类型（A 蓝色 / B 红色），可通过下拉菜单切换类型，颜色实时更新
+
+**关键关联**：滑轮必须放置在折痕线上（自动吸附），`attached_fold_line_id` 记录关联的折痕 ID，从而建立 pulley → fold_line → joint 的传动链。
+
+---
+
+## 用法示例
+
+### 完整工作流：CAD 设计 → 协同仿真
+
+```bash
+# 1. 打开 CAD 编辑器，设计折纸手
+python scripts/run_cad.py
+#    - 绘制轮廓线和折痕线
+#    - 放置滑轮（自动吸附到折痕线）
+#    - 穿腱绳（按路径顺序点击滑轮，右键完成）
+#    - 放置驱动器（A/B 型）
+#    - 保存为 .ohd 文件
+
+# 2. 导出 URDF + STL
+python scripts/export_urdf.py "models/ohd test/ohd_2.dxf" --thickness 3.0
+
+# 3. 启动增强协同交互仿真
+python scripts/run_synergy_from_ohd.py "models/ohd test/ohd_2.ohd"
+#    - 右侧面板四个滑块：Motor A, Motor B, σ, σ_f
+#    - 拖动滑块驱动手指运动
+#    - σ 控制所有手指同步闭合/打开
+#    - σ_f 控制手指间的相对运动
+```
+
+### 对比不同路由
+
+```bash
+# 路由 (a)
+python scripts/run_synergy_from_ohd.py "models/ohd test/ohd_2.ohd"
+
+# 路由 (b)
+python scripts/run_synergy_from_ohd.py "models/ohd test/ohd_3.ohd"
+```
+
+两种路由的 σ（同向运动）行为相同，但 σ_f（差向运动）的手指分配不同，可直观验证论文理论。
 
 ---
 
@@ -414,20 +521,4 @@ python tests/test_pinocchio_urdf.py
    - **谷折**（蓝色，颜色索引5）：关节在板的上表面，子面片折叠时向下弯折
 3. **共享边**：相邻面片的共用边只绘制一次，应为折痕色（红/蓝）
 4. **线段类型**：支持 `LINE` 和 `LWPOLYLINE` 实体
-
----
-
-## DXF 诊断工具
-
-当解析结果不符合预期时，可使用诊断工具逐步骤检查：
-
-```bash
-python scripts/diagnose_dxf.py tests/test_hand.dxf
-```
-
-输出包括：
-- 原始线段提取情况
-- 交点分割后的线段数
-- 图结构（节点数、边数、边类型）
-- 找到的面片及其顶点和边
-- 边→面片映射关系
+5. **滑轮、腱绳、驱动器**：使用 CAD 编辑器 (`scripts/run_cad.py`) 在 `.ohd` 文件中添加，不在 DXF 中绘制
