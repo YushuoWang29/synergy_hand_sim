@@ -28,10 +28,16 @@ class AdaptiveSynergyModel:
         self._precompute()
     
     def _precompute(self):
-        """预计算协同矩阵 S 和柔顺矩阵 C"""
+        """预计算协同矩阵 S 和柔顺矩阵 C
+        
+        使用伪逆 (pinv) 而非普通逆 (inv) 以处理 R 行之间可能共线的情况。
+        例如当 R 和 R_f 完全成比例时 (所有滑轮半径/摩擦相同)，
+        RE = R E^{-1} R^T 可能秩亏缺，用 inv 会产生数值垃圾。
+        pinv 自动将零空间投影为零，保持非零空间正确。
+        """
         E_inv = np.diag(1.0 / np.diag(self.E))
         RE = self.R @ E_inv @ self.R.T
-        RE_inv = np.linalg.inv(RE)
+        RE_inv = np.linalg.pinv(RE)
         
         # 主动协同矩阵 S^(k) = E^{-1} R^T (R E^{-1} R^T)^{-1}
         self.S = E_inv @ self.R.T @ RE_inv

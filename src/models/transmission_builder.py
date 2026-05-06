@@ -207,11 +207,11 @@ def build_synergy_model(design: OrigamiHandDesign):
     if R.size == 0:
         raise ValueError("设计中未找到任何肌腱，无法构建驱动模型。")
 
-    # CRITICAL: All tendons share the same A/B motors, so they all receive the same
+    # All tendons share the same A/B motors, so they all receive the same
     # sigma = (θ_A + θ_B)/2 and sigma_f = (θ_A - θ_B)/2 inputs.
-    # Instead of treating each tendon as an independent actuator input (k=num_tendons, m=num_tendons),
-    # average the tendon rows into a single effective R and Rf (k=1, m=1).
-    # This means: R_avg * q = sigma, Rf_avg * q = sigma_f — with only 1 sigma and 1 sigma_f input.
+    # Average tendon rows into a single effective R and Rf (k=1, m=1).
+    # This models the physical reality: there is only 1 sigma and 1 sigma_f
+    # driving all tendons simultaneously.
     num_tendons = R.shape[0]
     if num_tendons > 1:
         R = R.mean(axis=0, keepdims=True)    # shape (1, n)

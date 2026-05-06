@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+<robot name="ohd_6">
+  <material name="face_material">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+  <link name="face_0">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_0.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_1">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_1.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_2">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_2.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_3">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_3.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_4">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_4.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_5">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_5.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_6">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_6.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_7">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_7.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_8">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_8.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_9">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_9.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_10">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_10.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_11">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_11.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_12">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_12.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_13">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_13.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_14">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_14.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <link name="face_15">
+    <visual>
+      <geometry>
+        <mesh filename="meshes/face_15.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="face_material"/>
+    </visual>
+  </link>
+  <joint name="joint_0" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_1"/>
+    <origin xyz="0.000000 15.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="0.000000 1.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_1" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_5"/>
+    <origin xyz="15.000000 150.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_2" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_8"/>
+    <origin xyz="55.000000 150.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_3" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_11"/>
+    <origin xyz="95.000000 150.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_4" type="revolute">
+    <parent link="face_0"/>
+    <child link="face_2"/>
+    <origin xyz="135.000000 150.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_5" type="revolute">
+    <parent link="face_1"/>
+    <child link="face_3"/>
+    <origin xyz="-30.000000 0.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="0.000000 1.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_6" type="revolute">
+    <parent link="face_2"/>
+    <child link="face_14"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_7" type="revolute">
+    <parent link="face_3"/>
+    <child link="face_4"/>
+    <origin xyz="-30.000000 0.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="0.000000 1.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_8" type="revolute">
+    <parent link="face_5"/>
+    <child link="face_6"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_9" type="revolute">
+    <parent link="face_6"/>
+    <child link="face_7"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_10" type="revolute">
+    <parent link="face_8"/>
+    <child link="face_9"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_11" type="revolute">
+    <parent link="face_9"/>
+    <child link="face_10"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_12" type="revolute">
+    <parent link="face_11"/>
+    <child link="face_12"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_13" type="revolute">
+    <parent link="face_12"/>
+    <child link="face_13"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+  <joint name="joint_14" type="revolute">
+    <parent link="face_14"/>
+    <child link="face_15"/>
+    <origin xyz="0.000000 30.000000 0.000000" rpy="0 0 0"/>
+    <axis xyz="1.000000 0.000000 0.000000"/>
+    <limit effort="10" velocity="3.14" lower="-1.57" upper="1.57"/>
+  </joint>
+</robot>

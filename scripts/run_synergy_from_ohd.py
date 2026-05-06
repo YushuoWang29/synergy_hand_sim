@@ -164,7 +164,7 @@ def main():
         urdf_path, mesh_dir,
         synergy_callback=synergy_callback,
         synergy_motor_names=["Motor A", "Motor B"],
-        ctrl_range_deg=720.0,
+        ctrl_range_deg=1440.0,
         synergy_with_sigma_sliders=True,
     )
 
