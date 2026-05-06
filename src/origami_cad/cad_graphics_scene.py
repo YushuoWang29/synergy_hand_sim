@@ -131,7 +131,7 @@ class CadGraphicsScene(QGraphicsScene):
         for tid, tendon in self._tendons.items():
             permanent_lines = []
             prev_item = None
-            for seq_id in tendon.pulley_sequence:
+            for i, seq_id in enumerate(tendon.pulley_sequence):
                 # 找对应的图元 item
                 cur_item = None
                 if seq_id >= 0:
@@ -142,10 +142,48 @@ class CadGraphicsScene(QGraphicsScene):
                             break
                 else:
                     # 负数：驱动器，-1 -> A (type 0), -2 -> B (type 1)
+                    # 有多个相同类型驱动器时，选择距离最近邻节点最近的驱动器
+                    target_type = -(seq_id + 1)  # -1->0(A), -2->1(B)
+
+                    # 找出参考位置（上一个节点，或下一个节点）
+                    ref_pos = None
+                    if prev_item is not None:
+                        ref_pos = prev_item.sceneBoundingRect().center()
+                    else:
+                        # 如果是第一个节点，找路径中下一个节点的位置
+                        for j in range(i + 1, len(tendon.pulley_sequence)):
+                            next_id = tendon.pulley_sequence[j]
+                            next_item = None
+                            if next_id >= 0:
+                                for item, p in self._pulleys.items():
+                                    if p.id == next_id:
+                                        next_item = item
+                                        break
+                            else:
+                                for item, (atype, _) in self._actuator_graphics.items():
+                                    if atype == -(next_id + 1):
+                                        next_item = item
+                                        break
+                            if next_item is not None:
+                                ref_pos = next_item.sceneBoundingRect().center()
+                                break
+
+                    # 选择距离参考位置最近的同类型驱动器
+                    best_dist = float('inf')
+                    best_item = None
                     for item, (atype, pos) in self._actuator_graphics.items():
-                        if -(atype + 1) == seq_id:
-                            cur_item = item
-                            break
+                        if atype == target_type:
+                            if ref_pos is not None:
+                                dist = QLineF(ref_pos, item.sceneBoundingRect().center()).length()
+                                if dist < best_dist:
+                                    best_dist = dist
+                                    best_item = item
+                            else:
+                                # 没有参考位置，选第一个
+                                best_item = item
+                                break
+                    cur_item = best_item
+
                 if cur_item is None:
                     continue
                 if prev_item is not None:
@@ -159,6 +197,7 @@ class CadGraphicsScene(QGraphicsScene):
                 prev_item = cur_item
             if permanent_lines:
                 self._tendon_graphics[tid] = permanent_lines
+
 
     def load_actuators(self, actuator_positions: list):
         """从保存的位置列表加载驱动器图元"""

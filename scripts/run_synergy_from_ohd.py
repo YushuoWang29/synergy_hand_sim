@@ -146,7 +146,9 @@ def main():
     def synergy_callback(theta1_rad, theta2_rad):
         sigma = (theta1_rad + theta2_rad) / 2.0
         sigma_f = (theta1_rad - theta2_rad) / 2.0
-        q = model.solve(np.array([sigma]), np.array([sigma_f]))
+        # R 矩阵 shape = (num_tendons, num_joints)，sigma 需扩展为 (num_tendons,) 向量
+        # 对应多根腱绳时每根共享同一电机驱动值
+        q = model.solve(sigma * np.ones(model.k), sigma_f * np.ones(model.m))
         result = {}
         for urdf_name, syn_idx in urdf_to_syn_map.items():
             if 0 <= syn_idx < len(q):
@@ -154,6 +156,7 @@ def main():
             else:
                 result[urdf_name] = 0.0
         return result
+
 
     # 6. 启动 MuJoCo（四滑块协同模式）
     print("\n启动 MuJoCo 查看器…")
