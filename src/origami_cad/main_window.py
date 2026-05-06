@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from .cad_graphics_scene import CadGraphicsScene, DrawMode
 from .cad_graphics_view import CadGraphicsView
 from .property_panel import PropertyPanel
-from src.models.origami_design import OrigamiHandDesign, FoldLine, Point2D, FoldType, Pulley, Tendon
+from src.models.origami_design import OrigamiHandDesign, FoldLine, Point2D, FoldType, Pulley, Tendon, HOLE_ID_OFFSET
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -21,9 +21,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 属性面板
         self.property_panel = PropertyPanel()
-        dock = QtWidgets.QDockWidget("属性", self)
-        dock.setWidget(self.property_panel)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+        self._property_dock = QtWidgets.QDockWidget("属性", self)
+        self._property_dock.setWidget(self.property_panel)
+        self._property_dock.setObjectName("propertyDock")
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self._property_dock)
 
         self._create_toolbar()
         self._create_menus()
@@ -31,15 +32,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # 信号连接
         self.scene.line_selected.connect(self._on_line_selected)
         self.scene.pulley_selected.connect(self._on_pulley_selected)
+        self.scene.hole_selected.connect(self._on_hole_selected)
         self.scene.actuator_selected.connect(self._on_actuator_selected)
         self.property_panel.stiffness_changed.connect(self._on_stiffness_changed)
         self.property_panel.actuator_type_changed.connect(self._on_actuator_type_changed)
         self.property_panel.pulley_friction_changed.connect(self._on_pulley_friction_changed)
         self.property_panel.pulley_radius_changed.connect(self._on_pulley_radius_changed)
+        self.property_panel.hole_plate_offset_changed.connect(self._on_hole_plate_offset_changed)
+        self.property_panel.hole_friction_changed.connect(self._on_hole_friction_changed)
 
         # 存储当前选中的图元
         self._selected_actuator_item = None
         self._selected_pulley_id = None
+        self._selected_hole_id = None
 
     def _create_toolbar(self):
         toolbar = self.addToolBar("工具")
@@ -62,6 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mountain_action = add_tool("峰折", DrawMode.DRAW_MOUNTAIN, None)
         self.valley_action = add_tool("谷折", DrawMode.DRAW_VALLEY, None)
         self.pulley_action = add_tool("滑轮", DrawMode.PLACE_PULLEY, None)
+        self.hole_action = add_tool("孔(橙色)", DrawMode.PLACE_HOLE, None)
         self.tendon_action = add_tool("腱绳", DrawMode.DRAW_TENDON, None)
         self.actuator_action = add_tool("驱动器", DrawMode.PLACE_ACTUATOR, None)
 
@@ -116,6 +122,37 @@ class MainWindow(QtWidgets.QMainWindow):
             self.property_panel.update_for_item('none')
             self._selected_pulley_id = None
 
+    def _on_hole_selected(self, hid: int):
+        """孔被选中时的处理"""
+        hole_obj = None
+        for item, h in self.scene._holes.items():
+            if h.id == hid:
+                hole_obj = h
+                break
+        if hole_obj:
+            fold_info = None
+            if hole_obj.attached_fold_line_id is not None:
+                fold_info = self.scene.get_line_by_id(hole_obj.attached_fold_line_id)
+            self.property_panel.update_for_item('hole', (hole_obj, fold_info))
+            self._selected_hole_id = hid
+        else:
+            self.property_panel.update_for_item('none')
+            self._selected_hole_id = None
+
+    def _on_hole_plate_offset_changed(self, value: float):
+        if self._selected_hole_id is not None:
+            for item, h in self.scene._holes.items():
+                if h.id == self._selected_hole_id:
+                    h.plate_offset = value
+                    break
+
+    def _on_hole_friction_changed(self, value: float):
+        if self._selected_hole_id is not None:
+            for item, h in self.scene._holes.items():
+                if h.id == self._selected_hole_id:
+                    h.friction_coefficient = value
+                    break
+
     def _on_actuator_selected(self, atype: int):
         self.property_panel.update_for_item('actuator', atype)
         # 记住选中的驱动器图元（需要遍历找出）
@@ -161,11 +198,24 @@ class MainWindow(QtWidgets.QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction("退出", self.close)
 
+        # 视图菜单 - 用于开关属性面板等
+        view_menu = menu.addMenu("视图")
+        self._toggle_property_action = view_menu.addAction("属性")
+        self._toggle_property_action.setCheckable(True)
+        self._toggle_property_action.setChecked(True)
+        self._toggle_property_action.triggered.connect(self._toggle_property_panel)
+
+    def _toggle_property_panel(self, visible: bool):
+        """切换属性面板的显示/隐藏"""
+        self._property_dock.setVisible(visible)
+        self._toggle_property_action.setChecked(visible)
+
     def _new_file(self):
         self.design = OrigamiHandDesign(name="untitled")
         self.scene.clear_lines()
-        # 清除滑轮、腱绳、驱动器等
+        # 清除滑轮、腱绳、驱动器、孔等
         self.scene._pulleys.clear()
+        self.scene._holes.clear()
         self.scene._tendons.clear()
         self.scene._actuator_graphics.clear()
         self.scene._tendon_graphics.clear()
@@ -179,12 +229,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.design = OrigamiHandDesign.load(path)
             self.scene.clear_lines()
             self.scene.load_lines(list(self.design.fold_lines.values()))
-            # 加载滑轮、驱动器、腱绳（注意顺序：腱绳依赖前两者已加载）
+            # 加载滑轮、孔、驱动器、腱绳（注意顺序：腱绳依赖前两者已加载）
             self.scene.load_pulleys(self.design.pulleys)
+            self.scene.load_holes(self.design.holes)
             self.scene.load_actuators(self.design.actuator_positions)
             self.scene.load_tendons(self.design.tendons)
             if self.design.fold_lines:
                 self.scene._next_line_id = max(self.design.fold_lines.keys(), default=-1) + 1
+            if self.design.holes:
+                self.scene._hole_id = min(self.design.holes.keys(), default=HOLE_ID_OFFSET) - 1
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "错误", f"无法打开: {e}")
 
@@ -197,6 +250,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.design.pulleys.clear()
         for item, pulley in self.scene._pulleys.items():
             self.design.pulleys[pulley.id] = pulley
+        # 孔
+        self.design.holes.clear()
+        for item, hole in self.scene._holes.items():
+            self.design.holes[hole.id] = hole
         # 肌腱
         self.design.tendons = self.scene._tendons
         # 驱动器位置

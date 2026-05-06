@@ -6,6 +6,8 @@ class PropertyPanel(QtWidgets.QWidget):
     actuator_type_changed = QtCore.pyqtSignal(int)   # 0 or 1
     pulley_friction_changed = QtCore.pyqtSignal(float)
     pulley_radius_changed = QtCore.pyqtSignal(float)
+    hole_plate_offset_changed = QtCore.pyqtSignal(float)
+    hole_friction_changed = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,17 +56,44 @@ class PropertyPanel(QtWidgets.QWidget):
         pulley_l.addRow("关联折痕:", self.pulley_fold_label)
         layout.addWidget(self.pulley_widget)
 
-        # 默认隐藏
-        self.stiff_widget.hide()
-        self.act_widget.hide()
-        self.pulley_widget.hide()
+        # 孔属性编辑
+        self.hole_widget = QtWidgets.QWidget()
+        hole_l = QtWidgets.QFormLayout(self.hole_widget)
+        self.hole_offset_spin = QtWidgets.QDoubleSpinBox()
+        self.hole_offset_spin.setRange(0.0, 100.0)
+        self.hole_offset_spin.setDecimals(2)
+        self.hole_offset_spin.valueChanged.connect(self.hole_plate_offset_changed.emit)
+        hole_l.addRow("板厚 (mm):", self.hole_offset_spin)
+
+        self.hole_friction_spin = QtWidgets.QDoubleSpinBox()
+        self.hole_friction_spin.setRange(0.0, 10.0)
+        self.hole_friction_spin.setDecimals(3)
+        self.hole_friction_spin.valueChanged.connect(self.hole_friction_changed.emit)
+        hole_l.addRow("摩擦系数:", self.hole_friction_spin)
+
+        self.hole_fold_label = QtWidgets.QLabel("无")
+        hole_l.addRow("关联折痕:", self.hole_fold_label)
+        layout.addWidget(self.hole_widget)
+
+        # 默认全部隐藏
+        self.hide_all()
         layout.addStretch()
 
-    def update_for_item(self, item_type: str, data=None):
-        """根据选中项类型更新面板"""
+    def hide_all(self):
+        """隐藏所有属性组件"""
         self.stiff_widget.hide()
         self.act_widget.hide()
         self.pulley_widget.hide()
+        self.hole_widget.hide()
+        self.info_label.setText("未选中")
+
+    def update_for_item(self, item_type: str, data=None):
+        """根据选中项类型更新面板。先隐藏所有组件，再按需显示。"""
+        self.stiff_widget.hide()
+        self.act_widget.hide()
+        self.pulley_widget.hide()
+        self.hole_widget.hide()
+
         if item_type == 'line' and data:
             self.info_label.setText(f"线段 ID: {data.id}\n类型: {data.fold_type.name}")
             self.stiff_spin.blockSignals(True)
@@ -79,7 +108,6 @@ class PropertyPanel(QtWidgets.QWidget):
             self.act_type_combo.blockSignals(False)
             self.act_widget.show()
         elif item_type == 'pulley':
-            # data 是 (Pulley 对象, 折痕信息)
             pulley_obj, fold_info = data
             self.info_label.setText(f"滑轮 ID: {pulley_obj.id}")
             self.friction_spin.blockSignals(True)
@@ -89,8 +117,21 @@ class PropertyPanel(QtWidgets.QWidget):
             self.radius_spin.setValue(pulley_obj.radius)
             self.radius_spin.blockSignals(False)
             self.pulley_fold_label.setText(
-                f"折痕 {pulley_obj.attached_fold_line_id}" 
+                f"折痕 {pulley_obj.attached_fold_line_id}"
                 if pulley_obj.attached_fold_line_id is not None else "无")
             self.pulley_widget.show()
+        elif item_type == 'hole':
+            hole_obj, fold_info = data
+            self.info_label.setText(f"孔 ID: {hole_obj.id}")
+            self.hole_offset_spin.blockSignals(True)
+            self.hole_offset_spin.setValue(hole_obj.plate_offset)
+            self.hole_offset_spin.blockSignals(False)
+            self.hole_friction_spin.blockSignals(True)
+            self.hole_friction_spin.setValue(hole_obj.friction_coefficient)
+            self.hole_friction_spin.blockSignals(False)
+            self.hole_fold_label.setText(
+                f"折痕 {hole_obj.attached_fold_line_id}"
+                if hole_obj.attached_fold_line_id is not None else "无")
+            self.hole_widget.show()
         else:
             self.info_label.setText("未选中")

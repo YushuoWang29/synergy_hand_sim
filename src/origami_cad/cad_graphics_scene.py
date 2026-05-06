@@ -3,6 +3,7 @@
 重制版 QGraphicsScene：支持命令行/鼠标混合绘制，互斥工具栏，驱动器，腱绳端点保存。
 """
 
+import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt, QLineF, QPointF, QRectF, pyqtSignal
 from PyQt5.QtGui import QPen, QPainter, QColor, QBrush, QPainterPath, QPainterPathStroker
@@ -11,7 +12,8 @@ from PyQt5.QtWidgets import (QGraphicsScene, QGraphicsLineItem,
                              QGraphicsItem, QGraphicsRectItem)
 from enum import Enum, auto
 from typing import Optional, List, Dict, Tuple
-from src.models.origami_design import FoldLine, Point2D, FoldType, Pulley, Tendon
+from src.models.origami_design import (FoldLine, Point2D, FoldType, Pulley, Tendon, Hole,
+                                        is_hole_id, is_actuator_id, HOLE_ID_OFFSET)
 
 class DrawMode(Enum):
     SELECT = auto()
@@ -21,6 +23,7 @@ class DrawMode(Enum):
     PLACE_PULLEY = auto()
     DRAW_TENDON = auto()
     PLACE_ACTUATOR = auto()
+    PLACE_HOLE = auto()
 
 # 键盘映射到绘线类型
 KEY_TO_LINE_TYPE = {
@@ -46,6 +49,7 @@ class CadGraphicsScene(QGraphicsScene):
     line_selected = pyqtSignal(int)
     line_deleted = pyqtSignal(int)
     pulley_selected = pyqtSignal(int)    # pulley id
+    hole_selected = pyqtSignal(int)      # hole id
     actuator_selected = pyqtSignal(int)  # 0 or 1 (type)
 
     def __init__(self, parent=None):
@@ -55,10 +59,12 @@ class CadGraphicsScene(QGraphicsScene):
         self._pulley_id = 0
         self._tendon_id = 0
         self._actuator_id = 0
+        self._hole_id = HOLE_ID_OFFSET  # 孔从 -100 开始递减
 
         # 图元映射
         self._lines: Dict[QtWidgets.QGraphicsLineItem, FoldLine] = {}
         self._pulleys: Dict[QtWidgets.QGraphicsEllipseItem, Pulley] = {}
+        self._holes: Dict[QtWidgets.QGraphicsEllipseItem, Hole] = {}
         self._actuator_graphics: Dict[QtWidgets.QGraphicsEllipseItem, Tuple[int, QPointF]] = {}  # item -> (type, pos)
         self._tendons: Dict[int, Tendon] = {}
         self._tendon_graphics: Dict[int, List[QtWidgets.QGraphicsLineItem]] = {}  # tendon_id -> 永久线列表
@@ -117,6 +123,19 @@ class CadGraphicsScene(QGraphicsScene):
             self._pulleys[ellipse] = pulley
             self._pulley_id = max(self._pulley_id, pid + 1)
 
+    def load_holes(self, holes: Dict[int, Hole]):
+        """从数据加载孔图元"""
+        for hid, hole in holes.items():
+            rad = 3
+            pos = hole.position
+            ellipse = QtWidgets.QGraphicsEllipseItem(pos.x - rad, pos.y - rad, rad*2, rad*2)
+            ellipse.setBrush(QColor(255, 140, 0))  # 橙色
+            ellipse.setPen(QPen(Qt.darkYellow, 1))
+            ellipse.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            self.addItem(ellipse)
+            self._holes[ellipse] = hole
+            self._hole_id = min(self._hole_id, hid - 1)
+
     def load_tendons(self, tendons: Dict[int, Tendon]):
         """从数据重建腱绳图元（需在 load_pulleys 和 load_actuators 之后调用）"""
         # 清除旧的腱绳图元
@@ -138,6 +157,15 @@ class CadGraphicsScene(QGraphicsScene):
                     # 正数：滑轮
                     for item, p in self._pulleys.items():
                         if p.id == seq_id:
+                            cur_item = item
+                            break
+                    if cur_item is None:
+                        # 可能是孔（负ID但 > -100 或者... 不，孔是 <= -100）
+                        pass
+                elif is_hole_id(seq_id):
+                    # 孔（<= -100）
+                    for item, h in self._holes.items():
+                        if h.id == seq_id:
                             cur_item = item
                             break
                 else:
@@ -229,6 +257,8 @@ class CadGraphicsScene(QGraphicsScene):
             self._add_tendon_point(pos)
         elif self.draw_mode == DrawMode.PLACE_ACTUATOR:
             self._place_actuator(pos, 0)  # 默认A
+        elif self.draw_mode == DrawMode.PLACE_HOLE:
+            self._place_hole(pos)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -263,8 +293,8 @@ class CadGraphicsScene(QGraphicsScene):
                 self._select_none()
             return
 
-        # 命令模式激活：L/M/V/P/A（需要坐标输入或鼠标点击）
-        cmd_keys = (Qt.Key_L, Qt.Key_M, Qt.Key_V, KEY_TO_PULLEY_MODE, KEY_TO_ACTUATOR_MODE)
+        # 命令模式激活：L/M/V/P/A/H（需要坐标输入或鼠标点击）
+        cmd_keys = (Qt.Key_L, Qt.Key_M, Qt.Key_V, KEY_TO_PULLEY_MODE, KEY_TO_ACTUATOR_MODE, Qt.Key_H)
         if not self._cmd_active and event.key() in cmd_keys:
             self._start_command_mode(event.key())
             return
@@ -293,16 +323,16 @@ class CadGraphicsScene(QGraphicsScene):
         elif key == KEY_TO_ACTUATOR_MODE:
             self._cmd_draw_mode = DrawMode.PLACE_ACTUATOR
             self._cmd_line_type = None
+        elif key == Qt.Key_H:
+            self._cmd_draw_mode = DrawMode.PLACE_HOLE
+            self._cmd_line_type = None
         else:
             return
 
         # 创建浮动输入框
         self._cmd_input = QLineEdit()
-        if hasattr(Qt.Key, 'name') and key != Qt.Key_A:
-            prefix = Qt.Key(key).name.decode()
-        else:
-            prefix = {Qt.Key_L: 'L', Qt.Key_M: 'M', Qt.Key_V: 'V',
-                      Qt.Key_P: 'P', Qt.Key_T: 'T', Qt.Key_A: 'A'}.get(key, '?')
+        prefix = {Qt.Key_L: 'L', Qt.Key_M: 'M', Qt.Key_V: 'V',
+                  Qt.Key_P: 'P', Qt.Key_T: 'T', Qt.Key_A: 'A', Qt.Key_H: 'H'}.get(key, '?')
         self._cmd_input.setPlaceholderText(f"{prefix}: x,y")
         self._cmd_input.returnPressed.connect(self._on_cmd_return)
         self._cmd_input.setMaximumWidth(150)
@@ -348,6 +378,8 @@ class CadGraphicsScene(QGraphicsScene):
             self._cmd_line_click(pt)
         elif self._cmd_draw_mode == DrawMode.PLACE_PULLEY:
             self._place_pulley(pt)
+        elif self._cmd_draw_mode == DrawMode.PLACE_HOLE:
+            self._place_hole(pt)
         # 腱绳模式不支持坐标输入，忽略
         self._cmd_input.clear()
 
@@ -359,6 +391,8 @@ class CadGraphicsScene(QGraphicsScene):
             self._cmd_line_click(pos)
         elif self._cmd_draw_mode == DrawMode.PLACE_PULLEY:
             self._place_pulley(pos)
+        elif self._cmd_draw_mode == DrawMode.PLACE_HOLE:
+            self._place_hole(pos)
         # 腱绳模式鼠标点击由场景正常处理（因为腱绳需要选择已有图元），这里不做，交给 _add_tendon_point
 
     def _cmd_line_click(self, pt: QPointF):
@@ -445,10 +479,10 @@ class CadGraphicsScene(QGraphicsScene):
 
     # ========== 腱绳 ==========
     def _add_tendon_point(self, pos: QPointF):
-        # 检查是否点到滑轮或驱动器图元
+        # 检查是否点到滑轮、孔或驱动器图元
         item = self.itemAt(pos, self.views()[0].transform())
         if isinstance(item, QtWidgets.QGraphicsEllipseItem):
-            if item in self._pulleys or item in self._actuator_graphics:
+            if item in self._pulleys or item in self._actuator_graphics or item in self._holes:
                 # 避免重复点击同一个点连续两次
                 if self._tendon_temp_path and self._tendon_temp_path[-1] == item:
                     return
@@ -477,6 +511,8 @@ class CadGraphicsScene(QGraphicsScene):
                 # 用负数表示驱动器：-1 为 A, -2 为 B
                 atype = self._actuator_graphics[item][0]
                 seq.append(-(atype + 1))
+            elif item in self._holes:
+                seq.append(self._holes[item].id)
             else:
                 return   # 非法节点，丢弃
 
@@ -502,6 +538,29 @@ class CadGraphicsScene(QGraphicsScene):
         self._tendon_temp_lines.clear()
         self._tendon_temp_path.clear()
 
+    # ========== 孔 ==========
+    def _place_hole(self, pos: QPointF):
+        """放置孔（到折痕的距离保持在用户点击的位置）"""
+        # 注意：折痕吸附仅用于识别最近的折痕（记录到 attached_fold_line_id），
+        # 但孔的实际位置保留原始点击位置，不吸附到折痕线上。
+        # 因为孔的原始位置决定了 d（孔到折痕的水平距离）和 h（板厚偏移），
+        # 这些几何参数会在 find_hole_pairs() 中根据孔的实际坐标精确计算。
+        fold_id, side_sign = self._find_nearest_fold_line(pos)
+        
+        rad = 3
+        ellipse = QtWidgets.QGraphicsEllipseItem(pos.x() - rad, pos.y() - rad, rad*2, rad*2)
+        ellipse.setBrush(QColor(255, 140, 0))  # 橙色
+        ellipse.setPen(QPen(Qt.darkYellow, 1))
+        ellipse.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.addItem(ellipse)
+        hole = Hole(
+            id=self._hole_id,
+            position=Point2D(pos.x(), pos.y()),
+            attached_fold_line_id=fold_id,
+            face_id=side_sign)  # side_sign: +1 或 -1 表示折痕两侧
+        self._holes[ellipse] = hole
+        self._hole_id -= 1  # 递减确保唯一负 ID
+    
     # ========== 驱动器 ==========
     def _place_actuator(self, pos: QPointF, atype: int = 0):
         """放置驱动器点 0=A (蓝), 1=B (红)"""
@@ -551,6 +610,9 @@ class CadGraphicsScene(QGraphicsScene):
                 elif item in self._actuator_graphics:
                     self._select_actuator(item)
                     return
+                elif item in self._holes:
+                    self._select_hole(item)
+                    return
         self._select_none()
 
     def _find_tendon_id_by_line(self, line_item):
@@ -578,6 +640,7 @@ class CadGraphicsScene(QGraphicsScene):
         for it in self._lines: it.setSelected(False)
         for it in self._pulleys: it.setSelected(False)
         for it in self._actuator_graphics: it.setSelected(False)
+        for it in self._holes: it.setSelected(False)
         item.setSelected(True)
         pid = self._pulleys[item].id
         self.pulley_selected.emit(pid)
@@ -587,15 +650,27 @@ class CadGraphicsScene(QGraphicsScene):
         for it in self._lines: it.setSelected(False)
         for it in self._pulleys: it.setSelected(False)
         for it in self._actuator_graphics: it.setSelected(False)
+        for it in self._holes: it.setSelected(False)
         item.setSelected(True)
         atype, _ = self._actuator_graphics[item]
         self.actuator_selected.emit(atype)
+
+    def _select_hole(self, item):
+        """选中孔"""
+        for it in self._lines: it.setSelected(False)
+        for it in self._pulleys: it.setSelected(False)
+        for it in self._actuator_graphics: it.setSelected(False)
+        for it in self._holes: it.setSelected(False)
+        item.setSelected(True)
+        hid = self._holes[item].id
+        self.hole_selected.emit(hid)
 
     def _select_none(self):
         self._select_line(None)
         # 同时取消所有选中
         for it in self._pulleys: it.setSelected(False)
         for it in self._actuator_graphics: it.setSelected(False)
+        for it in self._holes: it.setSelected(False)
 
     def _select_tendon(self, item):
         """选中腱绳（高亮其所属整条腱绳的所有线段）"""
@@ -620,6 +695,9 @@ class CadGraphicsScene(QGraphicsScene):
                 self.removeItem(item)
             elif isinstance(item, QtWidgets.QGraphicsEllipseItem) and item in self._pulleys:
                 del self._pulleys[item]
+                self.removeItem(item)
+            elif isinstance(item, QtWidgets.QGraphicsEllipseItem) and item in self._holes:
+                del self._holes[item]
                 self.removeItem(item)
             elif isinstance(item, QtWidgets.QGraphicsLineItem):
                 # 检查是否为腱绳图元
@@ -677,6 +755,51 @@ class CadGraphicsScene(QGraphicsScene):
                 best_pt = closest
                 best_id = fl.id
         return best_pt, best_id
+
+    def _find_nearest_fold_line(self, pos) -> Tuple[Optional[int], Optional[int]]:
+        """找到最近的折痕线，返回 (fold_line_id, side_sign)。
+        
+        side_sign: +1 = 折痕normal正方向一侧, -1 = 负方向一侧, None = 没有折痕
+        注意：孔不会吸附到折痕线上，孔的实际位置被保留用于后续精确几何计算。
+        """
+        best = self.snap_distance * 3  # 允许更大范围
+        best_id = None
+        best_side = None
+        
+        for item, fl in self._lines.items():
+            if not fl.is_fold:
+                continue  # 只吸附到折痕线（mount/valley）
+            p1 = np.array([fl.start.x, fl.start.y])
+            p2 = np.array([fl.end.x, fl.end.y])
+            pos_arr = np.array([pos.x(), pos.y()])
+            
+            # 计算点到直线的最短距离
+            dir_vec = p2 - p1
+            dir_norm = np.linalg.norm(dir_vec)
+            if dir_norm < 1e-10:
+                continue
+            dir_unit = dir_vec / dir_norm
+            
+            # 垂线距离
+            v = pos_arr - p1
+            proj_len = np.dot(v, dir_unit)
+            closest = p1 + proj_len * dir_unit
+            
+            # 判断投影点是否在线段范围内
+            proj_t = proj_len / dir_norm
+            if proj_t < -0.3 or proj_t > 1.3:
+                continue  # 离线段太远
+            
+            dist = np.linalg.norm(pos_arr - closest)
+            if dist < best:
+                best = dist
+                best_id = fl.id
+                # 计算侧边符号
+                normal = np.array([-dir_unit[1], dir_unit[0]])
+                side = 1 if np.dot(v, normal) > 0 else -1
+                best_side = side
+        
+        return best_id, best_side
 
     def get_line_by_id(self, line_id):
         for fl in self._lines.values():

@@ -162,9 +162,83 @@ class Pulley:
 
 
 @dataclass
+class Hole:
+    """
+    孔：用于孔类腱绳传动的路径节点。
+    
+    ID 约定：孔使用 <= -100 的负整数（-1,-2 已被驱动器占用）
+    
+    物理模型：腱绳穿过孔跨过折痕，通过驱动臂产生扭矩。
+    驱动臂随折叠角度变化：arm(q=0) = plate_offset (高度h)
+    
+    参数说明：
+        id : int (<= -100)
+        position : 孔在2D板面上的位置
+        attached_fold_line_id : 关联折痕ID（孔位于折痕的哪一侧）
+        face_id : 孔所在的面片ID（用于确定孔在折痕的哪一侧）
+        plate_offset : 板b上表面到折痕平面的高度 h（≈ 材料厚度）
+        friction_coefficient : 孔对腱绳的摩擦系数
+        radius : 孔的半径（用于摩擦模型和碰撞检测）
+    """
+    id: int
+    position: Point2D
+    attached_fold_line_id: Optional[int] = None
+    face_id: Optional[int] = None
+    plate_offset: float = 3.0
+    friction_coefficient: float = 0.3
+    radius: float = 1.5
+
+
+# ID 类型识别常量
+HOLE_ID_OFFSET = -100  # 孔使用 <= -100 的 ID
+ACTUATOR_A_ID = -1
+ACTUATOR_B_ID = -2
+
+
+def is_hole_id(element_id: int) -> bool:
+    """判断 ID 是否为孔"""
+    return element_id <= HOLE_ID_OFFSET
+
+
+def is_actuator_id(element_id: int) -> bool:
+    """判断 ID 是否为驱动器"""
+    return element_id in (ACTUATOR_A_ID, ACTUATOR_B_ID)
+
+
+def is_pulley_id(element_id: int) -> bool:
+    """判断 ID 是否为滑轮"""
+    return element_id > 0
+
+
+def element_type_name(element_id: int) -> str:
+    """返回元素类型名称"""
+    if is_pulley_id(element_id):
+        return "pulley"
+    elif is_actuator_id(element_id):
+        return "actuator"
+    elif is_hole_id(element_id):
+        return "hole"
+    return "unknown"
+
+
+@dataclass
 class Tendon:
     id: int
     pulley_sequence: List[int]
+    
+    @property
+    def has_holes(self) -> bool:
+        """检查腱绳路径是否包含孔元素"""
+        return any(is_hole_id(eid) for eid in self.pulley_sequence)
+    
+    def get_element_info(self) -> List[Tuple[str, int]]:
+        """
+        返回路径中每个元素的类型和ID
+        
+        Returns:
+            [(type_name, id), ...] 类型为 "pulley"/"hole"/"actuator"
+        """
+        return [(element_type_name(eid), eid) for eid in self.pulley_sequence]
 
 
 @dataclass
@@ -190,6 +264,7 @@ class OrigamiHandDesign:
         self.face_parent: dict[int, int] = {}
 
         self.pulleys: dict[int, Pulley] = {}
+        self.holes: dict[int, Hole] = {}
         self.tendons: dict[int, Tendon] = {}
         self.actuators: dict[int, Actuator] = {}
         self.actuator_positions: List[dict] = []
@@ -222,6 +297,13 @@ class OrigamiHandDesign:
         if pulley.id in self.pulleys:
             raise ValueError(f"Pulley {pulley.id} already exists")
         self.pulleys[pulley.id] = pulley
+
+    def add_hole(self, hole: Hole):
+        if hole.id in self.holes:
+            raise ValueError(f"Hole {hole.id} already exists")
+        if not is_hole_id(hole.id):
+            raise ValueError(f"Hole ID must be <= {HOLE_ID_OFFSET}, got {hole.id}")
+        self.holes[hole.id] = hole
 
     def add_tendon(self, tendon: Tendon):
         if tendon.id in self.tendons:
@@ -446,6 +528,17 @@ class OrigamiHandDesign:
                     "attached_fold_line_id": p.attached_fold_line_id
                 } for p in self.pulleys.values()
             ],
+            "holes": [
+                {
+                    "id": h.id,
+                    "position": {"x": h.position.x, "y": h.position.y},
+                    "attached_fold_line_id": h.attached_fold_line_id,
+                    "face_id": h.face_id,
+                    "plate_offset": h.plate_offset,
+                    "friction_coefficient": h.friction_coefficient,
+                    "radius": h.radius
+                } for h in self.holes.values()
+            ],
             "tendons": [
                 {
                     "id": t.id,
@@ -497,6 +590,18 @@ class OrigamiHandDesign:
                 p["id"], pos, p.get("radius", 3.5),
                 p.get("friction_coefficient", 0.3),
                 p.get("attached_fold_line_id")
+            ))
+
+        for h in d.get("holes", []):
+            pos = Point2D(h["position"]["x"], h["position"]["y"])
+            design.add_hole(Hole(
+                id=h["id"],
+                position=pos,
+                attached_fold_line_id=h.get("attached_fold_line_id"),
+                face_id=h.get("face_id"),
+                plate_offset=h.get("plate_offset", 3.0),
+                friction_coefficient=h.get("friction_coefficient", 0.3),
+                radius=h.get("radius", 1.5)
             ))
 
         for t in d.get("tendons", []):

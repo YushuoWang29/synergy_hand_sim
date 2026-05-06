@@ -13,7 +13,10 @@
 
 from typing import List, Dict, Tuple, Optional
 import numpy as np
-from .origami_design import OrigamiHandDesign, FoldLine, FoldType, JointConnection, Point2D
+from .origami_design import (OrigamiHandDesign, FoldLine, FoldType, JointConnection, Point2D,
+                              is_hole_id, is_actuator_id, is_pulley_id)
+from .hole_transmission import (find_hole_pairs, compute_hole_equivalent_R_row,
+                                 compute_hole_lever_arm)
 
 
 def get_joint_list(design: OrigamiHandDesign) -> Tuple[List[JointConnection], Dict[int, int]]:
@@ -77,12 +80,21 @@ def get_joint_list(design: OrigamiHandDesign) -> Tuple[List[JointConnection], Di
     return joints, jid_to_idx
 
 
+def _has_holes(design: OrigamiHandDesign) -> bool:
+    """检查设计中是否有腱绳包含孔元素"""
+    return any(t.has_holes for t in design.tendons.values())
+
+
 def compute_R(design: OrigamiHandDesign) -> np.ndarray:
     """
     计算基础传动矩阵 R (num_tendons x num_joints)。
 
     论文公式 (31): R^T_i = sum(r_j) over all pulleys on joint i
-    对于每个关节，求和所有连接到该关节的滑轮半径。
+
+    扩展：当腱绳路径中包含孔时，孔对折痕的等效传动比
+    使用 q=0 处的线性化值: R_hole[joint] = h (plate_offset)
+
+    返回的 R 矩阵综合了滑轮和孔两部分贡献。
     """
     joints, jid_to_idx = get_joint_list(design)
     n = len(joints)
@@ -92,15 +104,38 @@ def compute_R(design: OrigamiHandDesign) -> np.ndarray:
     R_list = []
     for tendon in design.tendons.values():
         row = np.zeros(n)
-        for pid in tendon.pulley_sequence:
-            if pid < 0:
-                continue  # 跳过执行器（负 ID）
-            pulley = design.pulleys.get(pid)
-            if pulley is None or pulley.attached_fold_line_id is None:
-                continue
-            j_idx = jid_to_idx.get(pulley.attached_fold_line_id)
-            if j_idx is not None:
-                row[j_idx] += pulley.radius
+
+        if tendon.has_holes:
+            print(f"  Tendon {tendon.id}: mixing pulleys and holes")
+
+            # ---- Part 1: 滑轮贡献 ----
+            for pid in tendon.pulley_sequence:
+                if pid < 0:
+                    continue  # 跳过执行器（负 ID）
+                if is_hole_id(pid):
+                    continue  # 跳过孔元素
+                pulley = design.pulleys.get(pid)
+                if pulley is None or pulley.attached_fold_line_id is None:
+                    continue
+                j_idx = jid_to_idx.get(pulley.attached_fold_line_id)
+                if j_idx is not None:
+                    row[j_idx] += pulley.radius
+
+            # ---- Part 2: 孔贡献 (q=0 线性化) ----
+            hole_row = compute_hole_equivalent_R_row(design, tendon.id, jid_to_idx)
+            row += hole_row
+        else:
+            # 纯滑轮路径，保持原有逻辑
+            for pid in tendon.pulley_sequence:
+                if pid < 0:
+                    continue
+                pulley = design.pulleys.get(pid)
+                if pulley is None or pulley.attached_fold_line_id is None:
+                    continue
+                j_idx = jid_to_idx.get(pulley.attached_fold_line_id)
+                if j_idx is not None:
+                    row[j_idx] += pulley.radius
+
         R_list.append(row)
 
     result = np.array(R_list) if R_list else np.empty((0, n))
@@ -115,16 +150,10 @@ def compute_Rf(design: OrigamiHandDesign) -> np.ndarray:
     论文公式 (20)/(25)/(32):
         R_f^T = -AR^T . M^{-1} . V_max . e_v
 
-    其中：
-        AR in R^{(m+1)x n}:   传动半径矩阵
-        M in R^{(m+1)x(m+1)}: 速度耦合矩阵 (27)
-        V_max in R^{(m+1)x(m+1)}: 摩擦系数对角阵 (30)
-        e_v = [1,...,1]^T in R^{m+1}
-        m = pulley 数量
-
-    注意：pulley_sequence 已经包含路径顺序信息，因此无需额外的 P 矩阵。
-    两种路由（ohd_2 vs ohd_3）具有不同的 pulley_sequence，因此
-    AR 矩阵中的元素分布不同，导致 R_f 也不同。
+    扩展 v2：同时支持滑轮和孔元素。
+    - 孔被视为路径中的一个摩擦节点，plate_offset 作为等效"半径"（q=0 线性化），
+      friction_coefficient 作为摩擦系数。
+    - 路径中的所有元素（滑轮+孔）按顺序构成完整的摩擦链。
     """
     joints, jid_to_idx = get_joint_list(design)
     n = len(joints)
@@ -133,26 +162,34 @@ def compute_Rf(design: OrigamiHandDesign) -> np.ndarray:
 
     Rf_list = []
     for tendon in design.tendons.values():
-        pulley_seq = [pid for pid in tendon.pulley_sequence if pid >= 0]
-        m = len(pulley_seq)  # pulley 数量
+        # ---- 1. 提取所有传动元素（滑轮和孔），排除驱动器 ----
+        elements = []  # [(type_name, element_id), ...]
+        for eid in tendon.pulley_sequence:
+            if is_pulley_id(eid) or is_hole_id(eid):
+                elements.append((eid,))
+        m = len(elements)
         if m == 0:
             Rf_list.append(np.zeros(n))
             continue
 
-        # ---- 1. 构建 AR in R^{(m+1)x n} ----
-        # AR[seg_idx, j_idx] = pulley radius if pulley at seg_idx is on joint j_idx
-        # 注意：pulley_seq[seg_idx] 对应的滑轮影响段 seg_idx（公式 8）
+        # ---- 2. 构建 AR matrix (m+1) x n ----
         AR = np.zeros((m + 1, n))
-        for seg_idx, pid in enumerate(pulley_seq):
-            pulley = design.pulleys.get(pid)
-            if pulley is None or pulley.attached_fold_line_id is None:
-                continue
-            j_idx = jid_to_idx.get(pulley.attached_fold_line_id)
-            if j_idx is not None:
-                AR[seg_idx, j_idx] = pulley.radius
-        # 最后一个段（第 m+1 段）没有对应的滑轮，保持零行
+        for seg_idx, (eid,) in enumerate(elements):
+            if is_pulley_id(eid):
+                pulley = design.pulleys.get(eid)
+                if pulley and pulley.attached_fold_line_id is not None:
+                    j_idx = jid_to_idx.get(pulley.attached_fold_line_id)
+                    if j_idx is not None:
+                        AR[seg_idx, j_idx] = pulley.radius
+            elif is_hole_id(eid):
+                hole = design.holes.get(eid)
+                if hole and hole.attached_fold_line_id is not None:
+                    j_idx = jid_to_idx.get(hole.attached_fold_line_id)
+                    if j_idx is not None:
+                        # 孔在 q=0 处等效传动比 = plate_offset (h)
+                        AR[seg_idx, j_idx] = hole.plate_offset
 
-        # ---- 2. 构建 M 矩阵 (m+1)x(m+1) - 公式 (27) ----
+        # ---- 3. 构建 M 矩阵 (m+1) x (m+1) ----
         M = np.zeros((m + 1, m + 1))
         for i in range(m):
             M[i, i] = -1.0
@@ -160,24 +197,27 @@ def compute_Rf(design: OrigamiHandDesign) -> np.ndarray:
         M[m, 0] = 1.0
         M[m, m] = 1.0
 
-        # ---- 3. 构建 V_max 对角阵 (m+1)x(m+1) - 公式 (30) ----
+        # ---- 4. 构建 V_max 对角阵 (m+1) x (m+1) ----
         V_max = np.zeros((m + 1, m + 1))
-        for seg_idx, pid in enumerate(pulley_seq):
-            pulley = design.pulleys.get(pid)
-            if pulley is not None:
-                V_max[seg_idx, seg_idx] = pulley.friction_coefficient
-        # V_max[m, m] = 0（最后一个段无滑轮 -> 无摩擦损失）
+        for seg_idx, (eid,) in enumerate(elements):
+            if is_pulley_id(eid):
+                pulley = design.pulleys.get(eid)
+                if pulley:
+                    V_max[seg_idx, seg_idx] = pulley.friction_coefficient
+            elif is_hole_id(eid):
+                hole = design.holes.get(eid)
+                if hole:
+                    V_max[seg_idx, seg_idx] = hole.friction_coefficient
 
-        # ---- 4. e_v = [1,...,1]^T ----
+        # ---- 5. e_v ----
         e_v = np.ones(m + 1)
 
-        # ---- 5. 计算 R_f^T = -AR^T . M^{-1} . V_max . e_v ----
+        # ---- 6. 计算 R_f^T = -AR^T @ M^{-1} @ V_max @ e_v ----
         try:
             M_inv = np.linalg.inv(M)
         except np.linalg.LinAlgError:
             M_inv = np.linalg.pinv(M)
 
-        # R_f^T in R^n
         Rf_vec = -AR.T @ M_inv @ V_max @ e_v
         Rf_list.append(Rf_vec)
 
