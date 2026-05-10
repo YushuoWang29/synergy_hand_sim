@@ -11,8 +11,8 @@
 - [项目文件结构](#项目文件结构)
 - [各文件详细说明](#各文件详细说明)
 - [文件间调用关系](#文件间调用关系)
+- [动态协同 (Dynamic Synergy)](#动态协同-dynamic-synergy)
 - [增强自适应协同 (Augmented Adaptive Synergy)](#增强自适应协同-augmented-adaptive-synergy)
-- [测试数据](#测试数据)
 - [Origami CAD 编辑器](#origami-cad-编辑器-srcorigami_cad)
 - [用法示例](#用法示例)
 - [DXF 绘图规范](#dxf-绘图规范)
@@ -79,6 +79,16 @@ python scripts/run_synergy_from_ohd.py "models/ohd test/ohd_2.ohd"
 python scripts/run_mujoco_simulator.py models/ohd_2/ohd_2.urdf
 ```
 
+### 6. 动态协同模型测试
+
+```bash
+# 基础测试（7 项：基本功能、分离方向、增强组合、平滑过渡、OHD集成、工厂函数、MuJoCo）
+python tests/test_dynamic_synergy.py
+
+# 扩展测试（16 项：数学验证、边界情况、数值稳定性、蒙特卡罗随机测试）
+python tests/test_dynamic_synergy_extended.py
+```
+
 ---
 
 ## 项目文件结构
@@ -110,9 +120,10 @@ synergy_hand_sim/
 │   │   ├── origami_to_urdf.py        # URDF导出：将设计导出为URDF+STL格式
 │   │   └── transmission_builder.py   # 传动矩阵构建：R 和 R_f 矩阵，论文公式实现
 │   │
-│   ├── synergy/                  # 增强自适应协同模块
+│   ├── synergy/                  # 协同控制模块
 │   │   ├── base_adaptive.py          # 基础自适应协同模型 (AdaptiveSynergyModel)
-│   │   └── augmented_adaptive.py     # 增强自适应协同模型 (AugmentedAdaptiveSynergyModel)
+│   │   ├── augmented_adaptive.py     # 增强自适应协同模型 (AugmentedAdaptiveSynergyModel)
+│   │   └── dynamic_synergy.py        # 动态协同模型 (DynamicSynergyModel) [新增]
 │   │
 │   ├── visualization/            # 3D可视化
 │   │   └── origami_visualizer.py     # 3D可视化：MeshCat浏览器端渲染
@@ -142,7 +153,8 @@ synergy_hand_sim/
 ├── tests/                        # 测试文件
 │   ├── test_adaptive_synergy.py      # 基础协同模型测试
 │   ├── test_augmented_synergy.py     # 增强协同模型测试
-│   └── ... (其他测试文件)
+│   ├── test_dynamic_synergy.py       # 动态协同模型测试 (7 variants)
+│   └── test_dynamic_synergy_extended.py  # 动态协同扩展测试 (16 variants, 数学验证+数值稳定性)
 │
 └── notebooks/                    # Jupyter notebooks
 ```
@@ -278,7 +290,36 @@ $$
 
 ---
 
-### 8. `src/interactive/mujoco_simulator.py` — MuJoCo 仿真器
+### 8. `src/synergy/dynamic_synergy.py` — 动态协同模型 [新增]
+
+**功能**：实现 Piazza et al. (2016) *"SoftHand Pro-D: Matching dynamic content of natural user commands with hand embodiment for enhanced prosthesis control"* 中的 **Dynamic Synergy** 框架，基于 descriptor linear system 理论，将手部运动分解为慢速协同和快速协同两个方向。
+
+**依赖**：`base_adaptive.py`、`numpy`
+
+**类 `DynamicSynergyModel`**：
+
+| 方法 | 说明 |
+|---|---|
+| `__init__(n_joints, R, E_vec, T_damper)` | 计算慢速协同 S_s (Eq.6) 和快速协同 S_f (Eq.14) |
+| `_compute_slow_synergy(R, E_inv)` | S_s = E^{-1} R^T (R E^{-1} R^T)^{-1} — 准静态平衡（阻尼力可忽略） |
+| `_compute_fast_synergy(R, E, T)` | S_f = T_⊥^T · R^+_{E_y} — 阻尼主导的快速闭合方向 |
+| `solve_slow(sigma)` | q_s = S_s @ sigma — 慢速协同（对应 power grasp） |
+| `solve_fast(sigma)` | q_f = S_f @ sigma — 快速协同（对应 pinch grasp） |
+| `solve(sigma, speed_factor)` | q = (1-α)·S_s·σ + α·S_f·σ — 平滑插值 |
+| `solve_combined(sigma_dyn, sigma_aug, speed_factor, use_dynamic_on_f)` | 与 augmented synergy 联合求解，支持两种模式 |
+
+**核心公式**（论文 Eq. 3-14）：
+$$T^T C T \dot{q} + E q = R^T u$$
+$$q_{slow} = S_s \sigma, \quad q_{fast} = S_f \sigma \quad (\text{瞬态}), \quad q(\alpha) = (1-\alpha) q_{slow} + \alpha q_{fast}$$
+
+**关键特性**：
+- **speed_factor** $\alpha \in [0,1]$：从慢速（准静态，power grasp）到快速（阻尼主导，pinch grasp）的平滑过渡
+- **与 Augmented Adaptive Synergy 兼容**：统一 `solve_combined()` 接口，`use_dynamic_on_f` 控制是否对摩擦滑动也应用动态效应
+- **工厂函数** `build_dynamic_synergy_model(design)`：从 `OrigamiHandDesign` 自动提取 R、E、T 并构建模型
+
+---
+
+### 9. `src/interactive/mujoco_simulator.py` — MuJoCo 仿真器
 
 **功能**：基于 MuJoCo 的交互式 URDF 仿真器，支持**协同回调模式**和**四滑块互联动**。
 
@@ -383,6 +424,69 @@ DXF文件 ──▶ OrigamiParser ──▶ OrigamiHandDesign
                 ├──▶ build_synergy_model()
                 └──▶ MuJoCoSimulator(synergy_callback)
                         └── run() → 实时交互仿真
+```
+
+---
+
+## 动态协同 (Dynamic Synergy)
+
+### 论文背景
+
+实现 Piazza et al., *"SoftHand Pro-D: Matching Dynamic Content of Natural User Commands with Hand Embodiment for Enhanced Prosthesis Control"*, ICRA 2016。
+
+### 核心思想
+
+在欠驱动软体手中，利用**被动阻尼元件**实现多模式运动。在**慢速**驱动下，阻尼力可忽略，手沿**慢速协同方向** S_s 运动（准静态平衡）。在**快速**驱动下，阻尼力产生张力差，手沿**快速协同方向** S_f 运动（阻尼主导的瞬态响应）。当手接触物体后，从快速协同收敛到慢速协同，从而实现 power grasp 和 pinch grasp 的自然切换。
+
+### 数学模型 (Descriptor Linear System)
+
+力平衡方程（论文 Eq. 3）：
+$$T^T C T \dot{q} + E q = R^T u$$
+
+- **慢速闭合**（准静态，$\dot{q} \approx 0$）：阻尼力可忽略 → $Eq = R^T u$ → $S_s = E^{-1}R^T(RE^{-1}R^T)^{-1}$（Eq. 6）
+- **快速闭合**（瞬态，$T^T C T \dot{q}$ 主导）：描述子系统分解，分为快/慢两个子系统（Eq. 9-10）
+- **快速协同方向**：$S_f = T_\perp^T R^+_{E_y}$（Eq. 14），其中 $E_y = T_\perp E T_\perp^T$
+
+### 物理实现
+
+| 输入 | 物理意义 | 效果 |
+|---|---|---|
+| $\sigma$ (慢速驱动) | 准静态闭合 | 慢速协同：所有手指同步闭合（power grasp） |
+| $\sigma$ (快速驱动) | 阻尼主导闭合 | 快速协同：拇指对指（pinch grasp） |
+| $\alpha = \text{speed\_factor}$ | 插值系数 | 慢速→快速平滑过渡 |
+
+### 使用示例
+
+```python
+from src.synergy.dynamic_synergy import DynamicSynergyModel
+import numpy as np
+
+# 构建模型
+model = DynamicSynergyModel(
+    n_joints=4,
+    R=np.array([[7, 7, 7, 7]]),         # 传动矩阵
+    E_vec=np.array([1, 1, 1, 1]),       # 关节刚度
+    T_damper=np.array([[1, 0, 0, 0]])   # 阻尼器传动到 thumb 关节
+)
+
+# 慢速闭合 → power grasp (power grasp)
+q_slow = model.solve_slow(np.array([1.0]))
+
+# 快速闭合 → pinch grasp
+q_fast = model.solve_fast(np.array([1.0]))
+
+# 平滑过渡 (α=0.5)
+q_mid = model.solve(np.array([1.0]), speed_factor=0.5)
+
+# 与 augmented synergy 联合
+from src.synergy.augmented_adaptive import AugmentedAdaptiveSynergyModel
+aug_model = AugmentedAdaptiveSynergyModel(4, R, Rf, E_vec)
+q = model.solve_combined(
+    sigma_dyn=np.array([1.0]),
+    sigma_aug=np.array([0.3]),
+    speed_factor=0.7,
+    use_dynamic_on_f=True
+)
 ```
 
 ---

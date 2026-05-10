@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
-from src.models.origami_design import FoldType, FoldLine
+from src.models.origami_design import FoldType, FoldLine, Damper
 
 class PropertyPanel(QtWidgets.QWidget):
     stiffness_changed = QtCore.pyqtSignal(float)
@@ -8,6 +8,7 @@ class PropertyPanel(QtWidgets.QWidget):
     pulley_radius_changed = QtCore.pyqtSignal(float)
     hole_plate_offset_changed = QtCore.pyqtSignal(float)
     hole_friction_changed = QtCore.pyqtSignal(float)
+    damper_damping_changed = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -56,6 +57,20 @@ class PropertyPanel(QtWidgets.QWidget):
         pulley_l.addRow("关联折痕:", self.pulley_fold_label)
         layout.addWidget(self.pulley_widget)
 
+        # 阻尼器属性编辑
+        self.damper_widget = QtWidgets.QWidget()
+        damper_l = QtWidgets.QFormLayout(self.damper_widget)
+        self.damper_damping_spin = QtWidgets.QDoubleSpinBox()
+        self.damper_damping_spin.setRange(0.0, 1000.0)
+        self.damper_damping_spin.setDecimals(3)
+        self.damper_damping_spin.valueChanged.connect(self.damper_damping_changed.emit)
+        damper_l.addRow("阻尼系数:", self.damper_damping_spin)
+        self.damper_fold_label = QtWidgets.QLabel("无")
+        damper_l.addRow("关联折痕:", self.damper_fold_label)
+        self.damper_T_label = QtWidgets.QLabel("")
+        damper_l.addRow("传动比:", self.damper_T_label)
+        layout.addWidget(self.damper_widget)
+
         # 孔属性编辑
         self.hole_widget = QtWidgets.QWidget()
         hole_l = QtWidgets.QFormLayout(self.hole_widget)
@@ -85,6 +100,7 @@ class PropertyPanel(QtWidgets.QWidget):
         self.act_widget.hide()
         self.pulley_widget.hide()
         self.hole_widget.hide()
+        self.damper_widget.hide()
         self.info_label.setText("未选中")
 
     def update_for_item(self, item_type: str, data=None):
@@ -93,6 +109,7 @@ class PropertyPanel(QtWidgets.QWidget):
         self.act_widget.hide()
         self.pulley_widget.hide()
         self.hole_widget.hide()
+        self.damper_widget.hide()
 
         if item_type == 'line' and data:
             self.info_label.setText(f"线段 ID: {data.id}\n类型: {data.fold_type.name}")
@@ -133,5 +150,21 @@ class PropertyPanel(QtWidgets.QWidget):
                 f"折痕 {hole_obj.attached_fold_line_id}"
                 if hole_obj.attached_fold_line_id is not None else "无")
             self.hole_widget.show()
+        elif item_type == 'damper':
+            damper_obj, fold_infos = data
+            self.info_label.setText(f"阻尼器 ID: {damper_obj.id}")
+            self.damper_damping_spin.blockSignals(True)
+            self.damper_damping_spin.setValue(damper_obj.damping_coefficient)
+            self.damper_damping_spin.blockSignals(False)
+            fold_text = ", ".join([f"折痕 {f.id}" for f in fold_infos]) if fold_infos else "无"
+            self.damper_fold_label.setText(fold_text)
+            # 计算传动比信息
+            from src.models.transmission_builder import compute_damper_T
+            try:
+                T_mat = compute_damper_T({damper_obj.id: damper_obj})
+                self.damper_T_label.setText(f"T形状: {T_mat.shape}")
+            except Exception:
+                self.damper_T_label.setText("未知")
+            self.damper_widget.show()
         else:
             self.info_label.setText("未选中")

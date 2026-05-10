@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from .cad_graphics_scene import CadGraphicsScene, DrawMode
 from .cad_graphics_view import CadGraphicsView
 from .property_panel import PropertyPanel
-from src.models.origami_design import OrigamiHandDesign, FoldLine, Point2D, FoldType, Pulley, Tendon, HOLE_ID_OFFSET
+from src.models.origami_design import OrigamiHandDesign, FoldLine, Point2D, FoldType, Pulley, Tendon, HOLE_ID_OFFSET, Damper
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -34,12 +34,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scene.pulley_selected.connect(self._on_pulley_selected)
         self.scene.hole_selected.connect(self._on_hole_selected)
         self.scene.actuator_selected.connect(self._on_actuator_selected)
+        self.scene.damper_selected.connect(self._on_damper_selected)
         self.property_panel.stiffness_changed.connect(self._on_stiffness_changed)
         self.property_panel.actuator_type_changed.connect(self._on_actuator_type_changed)
         self.property_panel.pulley_friction_changed.connect(self._on_pulley_friction_changed)
         self.property_panel.pulley_radius_changed.connect(self._on_pulley_radius_changed)
         self.property_panel.hole_plate_offset_changed.connect(self._on_hole_plate_offset_changed)
         self.property_panel.hole_friction_changed.connect(self._on_hole_friction_changed)
+        self.property_panel.damper_damping_changed.connect(self._on_damper_damping_changed)
 
         # 存储当前选中的图元
         self._selected_actuator_item = None
@@ -68,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.valley_action = add_tool("谷折", DrawMode.DRAW_VALLEY, None)
         self.pulley_action = add_tool("滑轮", DrawMode.PLACE_PULLEY, None)
         self.hole_action = add_tool("孔(橙色)", DrawMode.PLACE_HOLE, None)
+        self.damper_action = add_tool("阻尼器(浅绿)", DrawMode.PLACE_DAMPER, None)
         self.tendon_action = add_tool("腱绳", DrawMode.DRAW_TENDON, None)
         self.actuator_action = add_tool("驱动器", DrawMode.PLACE_ACTUATOR, None)
 
@@ -161,6 +164,30 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._selected_actuator_item = item
                 break
 
+    def _on_damper_selected(self, did: int):
+        """阻尼器被选中时的处理"""
+        damper_obj = None
+        for item, d in self.scene._dampers.items():
+            if d.id == did:
+                damper_obj = d
+                break
+        if damper_obj:
+            fold_infos = []
+            for fid in damper_obj.attached_fold_line_ids:
+                fl = self.scene.get_line_by_id(fid)
+                if fl:
+                    fold_infos.append(fl)
+            self.property_panel.update_for_item('damper', (damper_obj, fold_infos))
+        else:
+            self.property_panel.update_for_item('none')
+
+    def _on_damper_damping_changed(self, value: float):
+        """阻尼器阻尼系数变化时更新场景中的阻尼器"""
+        for item in self.scene.selectedItems():
+            if isinstance(item, QtWidgets.QGraphicsEllipseItem) and item in self.scene._dampers:
+                self.scene._dampers[item].damping_coefficient = value
+                break
+
     def _on_stiffness_changed(self, value: float):
         selected = self.scene.selectedItems()
         for item in selected:
@@ -212,14 +239,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _new_file(self):
         self.design = OrigamiHandDesign(name="untitled")
-        self.scene.clear_lines()
-        # 清除滑轮、腱绳、驱动器、孔等
-        self.scene._pulleys.clear()
-        self.scene._holes.clear()
-        self.scene._tendons.clear()
-        self.scene._actuator_graphics.clear()
-        self.scene._tendon_graphics.clear()
-        self.scene._selected_actuator_item = None
+        self.scene.clear_all()
 
     def _open_file(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "打开设计", "", "Origami Hand Design (*.ohd)")
@@ -227,12 +247,17 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             self.design = OrigamiHandDesign.load(path)
-            self.scene.clear_lines()
+            # 清除前一个文件的所有图元（包括折痕线、滑轮、孔、阻尼器、驱动器、腱绳等）
+            self.scene.clear_all()
+            self._selected_actuator_item = None
+            # 加载新文件的内容
+            # 注意顺序：阻尼器必须在腱绳之前加载，
+            # 因为 load_tendons 的路径后处理需要按 ID 查找所有图元
             self.scene.load_lines(list(self.design.fold_lines.values()))
-            # 加载滑轮、孔、驱动器、腱绳（注意顺序：腱绳依赖前两者已加载）
             self.scene.load_pulleys(self.design.pulleys)
             self.scene.load_holes(self.design.holes)
             self.scene.load_actuators(self.design.actuator_positions)
+            self.scene.load_dampers(self.design.dampers)
             self.scene.load_tendons(self.design.tendons)
             if self.design.fold_lines:
                 self.scene._next_line_id = max(self.design.fold_lines.keys(), default=-1) + 1
@@ -254,6 +279,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.design.holes.clear()
         for item, hole in self.scene._holes.items():
             self.design.holes[hole.id] = hole
+        # 阻尼器
+        self.design.dampers.clear()
+        for item, damper in self.scene._dampers.items():
+            self.design.dampers[damper.id] = damper
         # 肌腱
         self.design.tendons = self.scene._tendons
         # 驱动器位置

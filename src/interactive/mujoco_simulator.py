@@ -27,17 +27,19 @@ class MuJoCoSimulator:
                  synergy_callback: Optional[Callable] = None,
                  synergy_motor_names: Optional[list] = None,
                  ctrl_range_deg: float = 720.0,
-                 synergy_with_sigma_sliders: bool = False):
+                 synergy_with_sigma_sliders: bool = False,
+                 synergy_with_speed_slider: bool = False):
         """
         Args:
             urdf_path: URDF 文件路径
             mesh_dir: STL mesh 文件目录（绝对路径）
             show_left_ui: 是否显示查看器左侧 UI
             show_right_ui: 是否显示查看器右侧 UI
-            synergy_callback: 协同回调函数 ctrl_radians -> qpos_radians dict
+            synergy_callback: 协同回调函数 (theta1, theta2[, speed]) -> qpos_radians dict
             synergy_motor_names: 电机滑块名称列表
             ctrl_range_deg: 滑块控制范围（度），默认 ±720°
             synergy_with_sigma_sliders: 是否启用 σ/σ_f 额外滑块
+            synergy_with_speed_slider: 是否启用 Speed (rad/s) 额外滑块（动态模式用）
         """
         self.urdf_path = os.path.abspath(urdf_path)
         self.mesh_dir = os.path.abspath(mesh_dir)
@@ -46,6 +48,7 @@ class MuJoCoSimulator:
         self.synergy_motor_names = synergy_motor_names or []
         self.ctrl_range_rad = np.radians(ctrl_range_deg)
         self.synergy_with_sigma_sliders = synergy_with_sigma_sliders
+        self.synergy_with_speed_slider = synergy_with_speed_slider
 
         # 将 URDF 转换为 MJCF XML 并加载
         self._load_model()
@@ -223,10 +226,22 @@ class MuJoCoSimulator:
                 # 双滑块模式：仅 Motor A, Motor B
                 slider_names = self.synergy_motor_names or ["Motor A", "Motor B"]
 
+            # 如果启用了 speed slider，在后面追加一个 Speed 滑块（范围 0~10 rad/s）
+            n_base = len(slider_names)
+            if self.synergy_with_speed_slider:
+                slider_names = slider_names + ["Speed (rad/s)"]
+
             for i, sname in enumerate(slider_names):
-                lines.append(f'    <body name="_slider_body_{i}" pos="0 0 0">')
-                lines.append(f'      <joint name="_slider_{i}" type="slide" '
-                             f'axis="1 0 0" pos="0 0 0" range="{cr_slider}"/>')
+                if self.synergy_with_speed_slider and i == n_base:
+                    # Speed 滑块：范围 0~10 rad/s
+                    speed_range = "0.0 10.0"
+                    lines.append(f'    <body name="_slider_body_{i}" pos="0 0 0">')
+                    lines.append(f'      <joint name="_slider_{i}" type="slide" '
+                                 f'axis="1 0 0" pos="0 0 0" range="{speed_range}"/>')
+                else:
+                    lines.append(f'    <body name="_slider_body_{i}" pos="0 0 0">')
+                    lines.append(f'      <joint name="_slider_{i}" type="slide" '
+                                 f'axis="1 0 0" pos="0 0 0" range="{cr_slider}"/>')
                 # 不可见、无碰撞的 geom
                 lines.append(f'      <geom type="sphere" size="0.001" rgba="0 0 0 0" '
                              f'contype="0" conaffinity="0"/>')
@@ -248,11 +263,23 @@ class MuJoCoSimulator:
             else:
                 slider_names = self.synergy_motor_names or ["Motor A", "Motor B"]
 
+            # 如果启用了 speed slider，追加一个 Speed actuator
+            n_base_act = len(slider_names)
+            if self.synergy_with_speed_slider:
+                slider_names = slider_names + ["Speed"]
+
             for i, mname in enumerate(slider_names):
-                lines.append(
-                    f'    <position name="{mname}" joint="_slider_{i}" '
-                    f'kp="0" ctrlrange="{cr}"/>'
-                )
+                if self.synergy_with_speed_slider and i == n_base_act:
+                    # Speed actuator：范围 0~10 rad/s
+                    lines.append(
+                        f'    <position name="{mname}" joint="_slider_{i}" '
+                        f'kp="0" ctrlrange="0.0 10.0"/>'
+                    )
+                else:
+                    lines.append(
+                        f'    <position name="{mname}" joint="_slider_{i}" '
+                        f'kp="0" ctrlrange="{cr}"/>'
+                    )
         else:
             # 直接模式：每个关节一个 position actuator
             cr_direct = '-3.14 3.14'
@@ -451,7 +478,7 @@ class MuJoCoSimulator:
                         self.data.ctrl[:] = ctrl
                         self._prev_ctrl = ctrl.copy()
 
-                        # 使用 A,B 驱动手指
+                    # 使用 A,B 驱动手指
                         theta1 = ctrl[0]
                         theta2 = ctrl[1]
                     else:
@@ -460,8 +487,14 @@ class MuJoCoSimulator:
                         theta2 = ctrl[1]
                         self._prev_ctrl = ctrl.copy()
 
+                    # 读取 Speed (rad/s) 滑块值（在四滑块+Speed 模式下索引为4）
+                    if self.synergy_with_speed_slider and num_ctrl >= 5:
+                        speed = abs(ctrl[4])
+                    else:
+                        speed = 0.0
+
                     # 通过协同模型计算关节角度
-                    qpos_dict = self.synergy_callback(theta1, theta2)
+                    qpos_dict = self.synergy_callback(theta1, theta2, speed)
                     for jname, rad in qpos_dict.items():
                         if jname in self.joint_name_to_qposadr:
                             adr = self.joint_name_to_qposadr[jname]

@@ -153,6 +153,33 @@ class JointConnection:
 
 
 @dataclass
+class Damper:
+    """
+    阻尼器：用于实现 dynamic synergy（Piazza et al. 2016）。
+    
+    物理模型：阻尼器的位移 x 通过传动矩阵 T 与各关节角 q 关联：
+        x = T q
+    阻尼力为 -C * x_dot，其中 C 为阻尼系数。
+    
+    每个阻尼器可以连接到多个关节（如 SoftHand Pro-D 中一个阻尼器
+    同时连接拇指远端和近端关节）。
+    """
+    id: int
+    position: Point2D
+    attached_fold_line_ids: List[int]  # 关联折痕 ID 列表
+    transmission_ratios: List[float]   # 每个关联折痕的传动比
+    damping_coefficient: float = 1.0
+    name: str = ""
+
+    def __post_init__(self):
+        if len(self.attached_fold_line_ids) != len(self.transmission_ratios):
+            raise ValueError(
+                f"Damper {self.id}: attached_fold_line_ids ({len(self.attached_fold_line_ids)}) "
+                f"!= transmission_ratios ({len(self.transmission_ratios)})"
+            )
+
+
+@dataclass
 class Pulley:
     id: int
     position: Point2D
@@ -163,6 +190,7 @@ class Pulley:
 
 @dataclass
 class Hole:
+
     """
     孔：用于孔类腱绳传动的路径节点。
     
@@ -191,13 +219,19 @@ class Hole:
 
 # ID 类型识别常量
 HOLE_ID_OFFSET = -100  # 孔使用 <= -100 的 ID
+DAMPER_ID_OFFSET = -200  # 阻尼器使用 <= -200 的 ID
 ACTUATOR_A_ID = -1
 ACTUATOR_B_ID = -2
 
 
 def is_hole_id(element_id: int) -> bool:
     """判断 ID 是否为孔"""
-    return element_id <= HOLE_ID_OFFSET
+    return element_id <= HOLE_ID_OFFSET and element_id > DAMPER_ID_OFFSET
+
+
+def is_damper_id(element_id: int) -> bool:
+    """判断 ID 是否为阻尼器"""
+    return element_id <= DAMPER_ID_OFFSET
 
 
 def is_actuator_id(element_id: int) -> bool:
@@ -206,8 +240,13 @@ def is_actuator_id(element_id: int) -> bool:
 
 
 def is_pulley_id(element_id: int) -> bool:
-    """判断 ID 是否为滑轮"""
-    return element_id > 0
+    """判断 ID 是否为滑轮
+    
+    滑轮使用非负 ID（从 0 开始）。
+    注意：eid=0 也是有效的滑轮 ID，不能排除。
+    孔、阻尼器、驱动器均使用负 ID，所以 eid >= 0 即为滑轮。
+    """
+    return element_id >= 0
 
 
 def element_type_name(element_id: int) -> str:
@@ -218,6 +257,8 @@ def element_type_name(element_id: int) -> str:
         return "actuator"
     elif is_hole_id(element_id):
         return "hole"
+    elif is_damper_id(element_id):
+        return "damper"
     return "unknown"
 
 
@@ -236,9 +277,14 @@ class Tendon:
         返回路径中每个元素的类型和ID
         
         Returns:
-            [(type_name, id), ...] 类型为 "pulley"/"hole"/"actuator"
+            [(type_name, id), ...] 类型为 "pulley"/"hole"/"damper"/"actuator"
         """
         return [(element_type_name(eid), eid) for eid in self.pulley_sequence]
+    
+    @property
+    def has_dampers(self) -> bool:
+        """检查腱绳路径是否包含阻尼器元素"""
+        return any(is_damper_id(eid) for eid in self.pulley_sequence)
 
 
 @dataclass
@@ -265,9 +311,11 @@ class OrigamiHandDesign:
 
         self.pulleys: dict[int, Pulley] = {}
         self.holes: dict[int, Hole] = {}
+        self.dampers: dict[int, Damper] = {}
         self.tendons: dict[int, Tendon] = {}
         self.actuators: dict[int, Actuator] = {}
         self.actuator_positions: List[dict] = []
+
 
         self.actuators[0] = Actuator(0, "Motor_A")
         self.actuators[1] = Actuator(1, "Motor_B")
@@ -310,7 +358,13 @@ class OrigamiHandDesign:
             raise ValueError(f"Tendon {tendon.id} already exists")
         self.tendons[tendon.id] = tendon
 
+    def add_damper(self, damper: Damper):
+        if damper.id in self.dampers:
+            raise ValueError(f"Damper {damper.id} already exists")
+        self.dampers[damper.id] = damper
+
     def set_root_face(self, face_id: int):
+
         if face_id not in self.faces:
             raise ValueError(f"Face {face_id} not found")
         self.root_face_id = face_id
@@ -539,7 +593,18 @@ class OrigamiHandDesign:
                     "radius": h.radius
                 } for h in self.holes.values()
             ],
+            "dampers": [
+                {
+                    "id": d.id,
+                    "position": {"x": d.position.x, "y": d.position.y},
+                    "attached_fold_line_ids": d.attached_fold_line_ids,
+                    "transmission_ratios": d.transmission_ratios,
+                    "damping_coefficient": d.damping_coefficient,
+                    "name": d.name
+                } for d in self.dampers.values()
+            ],
             "tendons": [
+
                 {
                     "id": t.id,
                     "pulley_sequence": t.pulley_sequence,
@@ -607,7 +672,19 @@ class OrigamiHandDesign:
         for t in d.get("tendons", []):
             design.add_tendon(Tendon(t["id"], t["pulley_sequence"]))
 
+        for dm in d.get("dampers", []):
+            pos = Point2D(dm["position"]["x"], dm["position"]["y"])
+            design.add_damper(Damper(
+                id=dm["id"],
+                position=pos,
+                attached_fold_line_ids=dm["attached_fold_line_ids"],
+                transmission_ratios=dm["transmission_ratios"],
+                damping_coefficient=dm.get("damping_coefficient", 1.0),
+                name=dm.get("name", "")
+            ))
+
         for a in d.get("actuators", []):
+
             design.actuators[a["id"]] = Actuator(
                 a["id"], a["name"], a.get("displacement", 0.0)
             )

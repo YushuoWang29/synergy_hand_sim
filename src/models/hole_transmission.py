@@ -218,14 +218,71 @@ def find_hole_pairs(design: OrigamiHandDesign, tendon_id: int) -> List[HolePairP
         fl_a = hole_a.attached_fold_line_id
         fl_b = hole_b.attached_fold_line_id
         
-        if fl_a is None or fl_b is None or fl_a != fl_b:
-            continue  # 不是同一折痕的两侧孔，跳过
+        if fl_a is not None and fl_b is not None and fl_a == fl_b:
+            # 两个孔都关联到同一个折痕，正常流程
+            fold_line = design.fold_lines.get(fl_a)
+        else:
+            # ===== 几何回退：通过腱绳跨过折痕来识别 =====
+            # 如果 attached_fold_line_id 未设置或不匹配（例如旧文件使用最近原则），
+            # 尝试通过两孔连线穿越哪条折痕来识别
+            fold_line = None
+            pos_a = np.array([hole_a.position.x, hole_a.position.y])
+            pos_b = np.array([hole_b.position.x, hole_b.position.y])
+            
+            best_dist = float('inf')
+            best_fold_id = None
+            best_normal = None
+            
+            for fid, fl in design.fold_lines.items():
+                if not fl.is_fold:
+                    continue
+                start = np.array([fl.start.x, fl.start.y])
+                end = np.array([fl.end.x, fl.end.y])
+                d1 = end - start
+                d2 = pos_b - pos_a
+                cross = np.cross(d1, d2)
+                if abs(cross) < 1e-10:
+                    continue
+                t = np.cross(pos_a - start, d2) / cross
+                u = np.cross(pos_a - start, d1) / cross
+                eps = 1e-6
+                if t >= -eps and t <= 1 + eps and u >= -eps and u <= 1 + eps:
+                    # 两孔连线穿越了这条折痕
+                    mid = (pos_a + pos_b) / 2
+                    intersect_pt = start + t * d1
+                    dist_to_mid = np.linalg.norm(intersect_pt - mid)
+                    if dist_to_mid < best_dist:
+                        best_dist = dist_to_mid
+                        best_fold_id = fid
+                        d1_norm = d1 / np.linalg.norm(d1)
+                        best_normal = np.array([-d1_norm[1], d1_norm[0]])
+            
+            if best_fold_id is not None:
+                # 使用几何识别的折痕
+                fold_line = design.fold_lines.get(best_fold_id)
+                # 更新孔的 attached_fold_line_id 和 face_id（如果尚未设置）
+                if fl_a is None:
+                    hole_a.attached_fold_line_id = best_fold_id
+                    if best_normal is not None:
+                        v_a = pos_a - np.array([fold_line.start.x, fold_line.start.y])
+                        hole_a.face_id = 1 if np.dot(v_a, best_normal) > 0 else -1
+                if fl_b is None:
+                    hole_b.attached_fold_line_id = best_fold_id
+                    if best_normal is not None:
+                        v_b = pos_b - np.array([fold_line.start.x, fold_line.start.y])
+                        hole_b.face_id = 1 if np.dot(v_b, best_normal) > 0 else -1
+            elif fl_a is not None:
+                # 仍然使用原有的关联（可能是未匹配或一侧无关联）
+                fold_line = design.fold_lines.get(fl_a)
+            elif fl_b is not None:
+                fold_line = design.fold_lines.get(fl_b)
+            else:
+                continue  # 完全无法识别
         
-    # 步骤2：用几何坐标精确计算两孔到折痕的有符号距离
-        fold_line = design.fold_lines.get(fl_a)
         if fold_line is None:
             continue
         
+        # 步骤2：用几何坐标精确计算两孔到折痕的有符号距离
         start = np.array([fold_line.start.x, fold_line.start.y])
         end = np.array([fold_line.end.x, fold_line.end.y])
         direction = end - start
@@ -270,7 +327,7 @@ def find_hole_pairs(design: OrigamiHandDesign, tendon_id: int) -> List[HolePairP
             hole_b_id=hid_b,
             d=d,
             h=h,
-            fold_line_id=fl_a
+            fold_line_id=fold_line.id  # 使用步骤1确定的折痕ID（支持几何回退）
         ))
     
     return pairs

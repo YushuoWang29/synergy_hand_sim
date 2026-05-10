@@ -247,7 +247,21 @@ def build_synergy_model(design: OrigamiHandDesign):
     if R.size == 0:
         raise ValueError("设计中未找到任何肌腱，无法构建驱动模型。")
 
-    # All tendons share the same A/B motors, so they all receive the same
+    # 识别"驱动腱绳"——只有包含驱动器电机(-1/-2)的腱绳才是真正的驱动腱绳。
+    # 纯阻尼器腱绳（如序列 [-200, -171, ..., -176]）不连接电机，
+    # 不应参与 R/Rf 的平均，否则会稀释传动矩阵并改变协同方向。
+    drive_indices = [i for (i, t) in enumerate(design.tendons.values())
+                     if -1 in t.pulley_sequence or -2 in t.pulley_sequence]
+    if len(drive_indices) == 0:
+        raise ValueError("设计中没有包含驱动器(-1/-2)的驱动腱绳。")
+
+    if len(drive_indices) < R.shape[0]:
+        n_excluded = R.shape[0] - len(drive_indices)
+        print(f"  Excluded {n_excluded} non-drive tendon(s) from R/Rf averaging.")
+        R = R[drive_indices]
+        Rf = Rf[drive_indices]
+
+    # All drive tendons share the same A/B motors, so they all receive the same
     # sigma = (θ_A + θ_B)/2 and sigma_f = (θ_A - θ_B)/2 inputs.
     # Average tendon rows into a single effective R and Rf (k=1, m=1).
     # This models the physical reality: there is only 1 sigma and 1 sigma_f
@@ -267,3 +281,144 @@ def build_synergy_model(design: OrigamiHandDesign):
 
     joint_names = [f"joint_{j.id}" for j in joints]
     return model, dict(zip(joint_names, E_vec))
+
+
+def compute_damper_T(design: OrigamiHandDesign) -> np.ndarray:
+    """
+    计算阻尼器传动矩阵 T (n_dampers x n_joints)。
+
+    论文公式 (2): T q = x
+    其中 x 为阻尼器位移，T 将关节角 q 映射到阻尼器位移。
+
+    每个 Damper 的 attached_fold_line_ids + transmission_ratios
+    定义了 T 矩阵的对应行。
+    """
+    joints, jid_to_idx = get_joint_list(design)
+    n = len(joints)
+    n_d = len(design.dampers)
+    if n == 0 or n_d == 0:
+        return np.empty((0, n))
+
+    T = np.zeros((n_d, n))
+    for idx, dm in enumerate(design.dampers.values()):
+        for fold_id, ratio in zip(dm.attached_fold_line_ids, dm.transmission_ratios):
+            j_idx = jid_to_idx.get(fold_id)
+            if j_idx is not None:
+                T[idx, j_idx] = ratio
+            else:
+                print(f"  WARNING: Damper {dm.id}: fold_line {fold_id} "
+                      f"not found in joint map")
+
+    print(f"  Damper T = {T}")
+    return T
+
+
+def build_dynamic_synergy_model(
+    design: OrigamiHandDesign,
+    use_augmented: bool = True,
+    speed_factor: float = 0.0
+):
+    """
+    从设计中构建完整的 dynamic synergy 模型。
+    可单独使用或与 augmented synergy 结合。
+
+    Parameters
+    ----------
+    design : OrigamiHandDesign
+        折纸手设计（含 pulleys, holes, dampers）。
+    use_augmented : bool
+        如果为 True，将 R_f 与 R 合并为 R_aug，构建
+        DynamicSynergyModel 以兼容 augmented synergy。
+        如果为 False，仅使用基础 R 构建。
+    speed_factor : float
+        默认速度因子（0=慢速，1=快速）。
+
+    Returns
+    -------
+    model : DynamicSynergyModel
+    info : dict
+        包含 'joint_names', 'E_vec', 'n_joints', 'n_dampers',
+        'has_augmented', 'T_diag' 等辅助信息。
+    """
+    joints, _ = get_joint_list(design)
+    n = len(joints)
+    if n == 0:
+        raise ValueError("设计中没有任何关节。")
+
+    R = compute_R(design)          # shape (k, n)
+    Rf = compute_Rf(design)        # shape (m, n)
+    T_mat = compute_damper_T(design)  # shape (n_d, n)
+    E_vec = np.array([
+        design.fold_lines[j.fold_line_id].stiffness
+        for j in joints
+    ])
+
+    n_tendons = R.shape[0]
+    n_dampers = T_mat.shape[0]
+
+    if R.size == 0:
+        raise ValueError("设计中未找到任何肌腱。")
+
+    # 识别"驱动腱绳"——只对包含驱动器(-1/-2)的腱绳做平均
+    drive_indices = [i for (i, t) in enumerate(design.tendons.values())
+                     if -1 in t.pulley_sequence or -2 in t.pulley_sequence]
+    if len(drive_indices) == 0:
+        raise ValueError("设计中没有包含驱动器(-1/-2)的驱动腱绳。")
+
+    if len(drive_indices) < n_tendons:
+        n_excluded = n_tendons - len(drive_indices)
+        print(f"  Dynamic: Excluded {n_excluded} non-drive tendon(s) from R/Rf averaging.")
+        R = R[drive_indices]
+        Rf = Rf[drive_indices]
+        n_tendons = R.shape[0]
+
+    # 平均多腱绳为单输入
+    if n_tendons > 1:
+        R = R.mean(axis=0, keepdims=True)
+        Rf = Rf.mean(axis=0, keepdims=True)
+
+    # 阻尼系数向量
+    C_diag = np.array([
+        dm.damping_coefficient
+        for dm in design.dampers.values()
+    ])
+
+    if n_dampers == 0:
+        print("  No dampers found. Using standard synergy (no dynamic effect).")
+        # 仍然返回模型，但 T 为空矩阵 → 无阻尼，动态效果不起作用
+        T_mat = np.empty((0, n))
+        C_diag = np.array([])
+
+    # 合并 R 和 R_f 构建 R_aug
+    if use_augmented and Rf.size > 0:
+        m = Rf.shape[0]
+        # 平均 Rf 为单行
+        if m > 1:
+            Rf = Rf.mean(axis=0, keepdims=True)  # (1, n)
+        R_aug = np.vstack([R, Rf])  # (2, n)
+    else:
+        R_aug = R.copy()  # (k, n)
+
+    from src.synergy.dynamic_synergy import DynamicSynergyModel
+
+    model = DynamicSynergyModel(
+        n_joints=n,
+        R=R_aug,
+        E_vec=E_vec,
+        T=T_mat,
+        C_diag=C_diag
+    )
+
+    joint_names = [f"joint_{j.id}" for j in joints]
+    info = {
+        'joint_names': joint_names,
+        'E_vec': E_vec,
+        'n_joints': n,
+        'n_dampers': n_dampers,
+        'has_augmented': use_augmented and Rf.size > 0,
+        'T_diag': C_diag,
+        'speed_factor': speed_factor,
+    }
+    return model, info
+
+
