@@ -162,11 +162,12 @@ def main():
         print(f"  关节数 = {n_joints}, 阻尼器数 = {n_dampers}")
         print(f"  慢速方向 0 (S_s[0]): {model.S_s[:, 0]}")
         if n_dampers > 0:
-            print(f"  快速方向 0 (S_f[0]): {model.S_f[:, 0]}")
-        if model.S_s.shape[1] > 1:
-            print(f"  慢速方向 1 (S_s[1]): {model.S_s[:, 1]}")
-        if model.S_f.shape[1] > 1 and n_dampers > 0:
-            print(f"  快速方向 1 (S_f[1]): {model.S_f[:, 1]}")
+            S_f = model.fast_synergy
+            print(f"  快速方向 0 (S_f[0]): {S_f[:, 0]}")
+            if S_f.shape[1] > 1:
+                print(f"  快速方向 1 (S_f[1]): {S_f[:, 1]}")
+
+
         print(f"  Speed 滑块范围: 0 ~ 10 rad/s (滑块值为 0~10 对应 speed_factor=0~1)")
 
         def synergy_callback(theta1_rad, theta2_rad, speed_rad_s=0.0):

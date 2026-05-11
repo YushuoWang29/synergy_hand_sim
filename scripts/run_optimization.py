@@ -188,10 +188,11 @@ def run_speed_optimization(design, ohd_path, output_dir, de_kwargs=None):
     # Get baseline dynamic synergy
     dyn_model, dyn_info = build_dynamic_synergy_model(design)
     S_s = dyn_model.S_s
-    S_f = dyn_model.S_f
+    S_f = dyn_model.fast_synergy
     
     print(f"\nBaseline slow synergy: {normalize_direction(S_s[:, 0])}")
     print(f"Baseline fast synergy: {normalize_direction(S_f[:, 0])}")
+
     print(f"Separation: ||S_f - S_s||/||S_s|| = {np.linalg.norm(S_f - S_s) / max(np.linalg.norm(S_s), 1e-10):.4f}")
     
     # === TARGET DEFINITION ===

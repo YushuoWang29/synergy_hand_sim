@@ -1407,7 +1407,7 @@
         1.0,
         1.0
       ],
-      "damping_coefficient": 3.0,
+      "damping_coefficient": 1000.0,
       "name": "Damper_-200"
     }
   ],

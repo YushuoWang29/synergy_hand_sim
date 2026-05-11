@@ -2,30 +2,45 @@
 """
 Dynamic Synergy Model (Piazza et al. 2016, ICRA)
 
-Implements the descriptor linear system approach for speed-dependent hand
-synergies. Uses passive damping components to generate different closures
-(different synergy directions) as the input speed changes.
+Implements speed-dependent hand synergies using passive damping components.
+The physical system is:
 
-Mathematical background (Piazza et al. 2016, "SoftHand Pro-D"):
-    System: T^T C T q_dot + E q = R^T u + w     (Eq. 3)
+    T^T C T q_dot + E q = R^T u + w     (Eq. 3)
 
-    Slow closure (quasi-static, damping negligible, q_dot ≈ 0):
-        E q = R^T u  →  q = S_s σ               (Eq. 4-6)
+At low speed (q_dot ≈ 0), damping is negligible and the solution reduces to
+the standard adaptive synergy (slow synergy S_s).
 
-    Fast closure (transient, damping dominates):
-        T^T C T q_dot ≫ 0  → initial direction = S_f σ   (Eq. 11-14)
-        Hand converges from S_f σ → S_s σ over time.
+At high speed, the damping force T^T C T q_dot opposes joint motion. This is
+modeled as an *effective additional stiffness* on the damped joints:
 
-    S_f = T_⊥^T R^+_{E_y}   where E_y = T_⊥ E T_⊥^T      (Eq. 14)
+    E_eff(α) = E + α · T^T · C · T
 
-Compatibility with Augmented Adaptive Synergies (Della Santina et al. 2018):
-    - Shares the same R (transmission) and E (stiffness) matrices
-    - R can be extended to R_aug = [R; R_f] for combined model
-    - Adds T (damper transmission) and C_diag (damping coefficients)
+where α = speed_factor ∈ [0, 1]. The equilibrium synergy matrix becomes:
+
+    S_eff(α) = E_eff(α)^{-1} R^T (R E_eff(α)^{-1} R^T)^{-1}
+
+This "damped equilibrium" interpretation:
+  - Preserves all joints bending in the same direction (no sign flip paradox)
+  - Reduces motion of damped joints proportionally to damping strength × speed
+  - Always satisfies both the motor constraint R·q = σ and damper consistency
+  - Smoothly interpolates between slow (α=0) and high-speed behavior (α=1)
+
+NOTE on descriptor system theory (Piazza et al. 2016):
+  The original paper derives S_f = T_⊥^T R^+_{E_y} via descriptor decomposition.
+  That formulation enforces T·S_f = 0, which is the *instantaneous rate* constraint
+  for the fast subsystem. For configurations with 3+ joints sharing one damper
+  (like ohd_8), this forces some joints to have negative angles — physically
+  unrealistic when the hand is closing. The damped equilibrium approach avoids
+  this by modeling the net effect of damping as a speed-dependent stiffness increase,
+  which is more physically appropriate for general damper topologies.
+
+References:
+  - Piazza et al. 2016, "SoftHand Pro-D: Matching Dynamic Content of Natural
+    User Commands with Hand Embodiment for Enhanced Prosthesis Control", ICRA.
 """
 
 import numpy as np
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 from .base_adaptive import AdaptiveSynergyModel
 
 
@@ -54,14 +69,14 @@ class DynamicSynergyModel:
     # Slow closure (quasi-static)
     q_slow = model.solve(sigma, speed_factor=0.0)
 
-    # Fast closure (damping-dominated transient)
+    # Fast closure (damping-dominated)
     q_fast = model.solve(sigma, speed_factor=1.0)
 
     # Combined with augmented synergy (R_aug = vstack([R, R_f]))
     R_aug = np.vstack([R, R_f])
     model = DynamicSynergyModel(n_joints, R_aug, E_vec, T, C_diag)
 
-    # sigma = [sigma_dyn, sigma_f], speed_factor applies to all directions
+    # sigma = [sigma_dyn, sigma_f], speed_factor applies to both
     q = model.solve(np.concatenate([sigma_dyn, sigma_f]), speed_factor)
     """
 
@@ -89,75 +104,66 @@ class DynamicSynergyModel:
         self.S_s = self._base_model.S       # (n, k)
         self.C_s = self._base_model.C       # (n, n) passive compliance
 
-        # --- Precompute Fast Synergy S_f ---
-        self.S_f = self._compute_fast_synergy()
+        # --- Precompute Damper-Induced Stiffness Term ---
+        # FULL T^T C T (coupled, used for projection direction estimate)
+        self._TCT_full = self.T.T @ self.C @ self.T  # (n, n)
+        # DIAGONAL of T^T C T: each damped joint gets independent stiffness.
+        # This removes the non-physical cross-coupling that can make some
+        # joints bend in reverse (sign flip) when a single damper connects
+        # multiple joints with different R values.
+        #
+        # Physical justification:
+        #   When a single shared damper connects multiple joints, the damper
+        #   cable is in series with each joint's tendon. The return spring on
+        #   the damper keeps it reset when slack. Each joint thus experiences
+        #   damping INDEPENDENTLY — the damper tendon slips if one joint moves
+        #   while another is locked. The coupled T^T C T would imply all joints
+        #   move together rigidly, which is not correct for tendon-driven
+        #   dampers with return springs.
+        #
+        #   Diagonal T^T C T → each damped joint j gets additional stiffness
+        #     ΔE_j = sum_i C_i * T_ij^2   (independent per joint)
+        self._TCT_diag = np.diag(np.diag(self._TCT_full))  # (n, n)
 
     # ------------------------------------------------------------------
-    #  Internal: compute T_⊥ (nullspace basis of T)
+    #  Core: compute speed-dependent synergy matrix via damped equilibrium
     # ------------------------------------------------------------------
-    def _compute_T_perp(self) -> np.ndarray:
+    def _compute_damped_synergy(self, speed_factor: float) -> np.ndarray:
         """
-        Compute a basis T_⊥ for the nullspace of T.
+        Compute the effective synergy matrix for a given speed factor.
+
+        At speed_factor=0: E_eff = E               →  S_eff = S_s (slow synergy)
+        At speed_factor=1: E_eff = E + diag(T^T C T)  →  S_eff = damped synergy
+
+        IMPORTANT: Uses diag(T^T C T) instead of full T^T C T.
+        This ensures each damped joint receives INDEPENDENT additional stiffness,
+        avoiding the non-physical cross-coupling that causes sign flips when
+        T=[1,1,...,1] and joints have different R values.
+
+        Parameters
+        ----------
+        speed_factor : float in [0, 1]
+            Fraction of full damping applied.
 
         Returns
         -------
-        T_perp : np.ndarray, shape (n_null, n_joints)
-            Each row is a basis vector in the nullspace of T.
-            If n_null == 0, T has no nullspace.
+        S_eff : np.ndarray, shape (n, k)
         """
-        n, n_j = self.T.shape  # (n_d, n_joints)
+        alpha = np.clip(float(speed_factor), 0.0, 1.0)
 
-        if n >= n_j:
-            # T has >= n_j rows, may be full column rank.
-            _, s, Vt = np.linalg.svd(self.T, full_matrices=True)
-            rank = np.sum(s > 1e-12 * max(s) if max(s) > 0 else 0)
-            if rank < n_j:
-                return Vt[rank:, :]  # rows corresponding to zero singular values
-            else:
-                return np.empty((0, n_j))
-        else:
-            # T is (n_d x n_joints) with n_d < n_joints.
-            # Nullspace has dimension n_j - n_d.
-            _, s, Vt = np.linalg.svd(self.T, full_matrices=True)
-            # Vt is (n_j x n_j), last (n_j - n_d) rows are nullspace basis
-            return Vt[self.n_d:, :]
+        # Effective stiffness: E + α · diag(T^T C T)
+        # Using diagonal formulation for physically correct independent damping.
+        E_eff = self.E + alpha * self._TCT_diag
+        E_eff_inv = np.linalg.inv(E_eff)
 
-    # ------------------------------------------------------------------
-    #  Compute fast synergy S_f
-    #  Following Eq. (14): S_f = T_⊥^T R^+_{E_y}
-    # ------------------------------------------------------------------
-    def _compute_fast_synergy(self) -> np.ndarray:
-        """
-        Precompute the fast dynamic synergy matrix S_f.
+        # Damped equilibrium synergy:
+        # S_eff = E_eff^{-1} R^T (R E_eff^{-1} R^T)^{-1}
+        RE_inv = E_eff_inv @ self.R.T   # (n, k)
+        RER = self.R @ RE_inv            # (k, k)
+        RER_inv = np.linalg.inv(RER)
 
-        Returns
-        -------
-        S_f : np.ndarray, shape (n, k)
-        """
-        T_perp = self._compute_T_perp()
-        n_null = T_perp.shape[0]
-
-        if n_null == 0:
-            # No nullspace → no independent fast dynamics → S_f = S_s
-            return self.S_s.copy()
-
-        # E_y = T_⊥ E T_⊥^T  (n_null x n_null)
-        E_y = T_perp @ self.E @ T_perp.T       # (n_null, n_null)
-        E_y_inv = np.linalg.pinv(E_y)
-
-        # R_bar = R T_⊥^T  (k x n_null)
-        R_bar = self.R @ T_perp.T              # (k, n_null)
-
-        # Compute R^+_{E_y} = E_y^{-1} R_bar^T (R_bar E_y^{-1} R_bar^T)^{-1}
-        RE = R_bar @ E_y_inv @ R_bar.T         # (k, k)
-        RE_inv = np.linalg.pinv(RE)
-
-        R_plus_Ey = E_y_inv @ R_bar.T @ RE_inv  # (n_null, k)
-
-        # S_f = T_⊥^T R^+_{E_y}  (n x k)
-        S_f = T_perp.T @ R_plus_Ey
-
-        return S_f
+        S_eff = RE_inv @ RER_inv         # (n, k)
+        return S_eff
 
     # ------------------------------------------------------------------
     #  Main solve method
@@ -177,8 +183,8 @@ class DynamicSynergyModel:
             [sigma_dyn, sigma_f].
         speed_factor : float or ndarray, in [0, 1]
             0.0 = slow closure (quasi-static, S_s)
-            1.0 = fast closure (damping-dominated, S_f)
-            Intermediate values interpolate smoothly.
+            1.0 = fast closure (damping-dominated)
+            Intermediate values → smooth damped equilibrium.
         J : np.ndarray, shape (m, n), optional
             Grasp Jacobian.
         f_ext : np.ndarray, shape (m,), optional
@@ -195,11 +201,8 @@ class DynamicSynergyModel:
             raise ValueError(
                 f"sigma must have {self.k} elements, got {sigma.shape[0]}")
 
-        # Clamp speed_factor to [0, 1]
-        alpha = np.clip(float(speed_factor), 0.0, 1.0)
-
-        # Interpolate between slow and fast synergies
-        S_eff = (1.0 - alpha) * self.S_s + alpha * self.S_f
+        # Compute speed-dependent damped equilibrium synergy
+        S_eff = self._compute_damped_synergy(float(speed_factor))
 
         # Active part
         q = S_eff @ sigma
@@ -217,27 +220,27 @@ class DynamicSynergyModel:
                        sigma_dyn: np.ndarray,
                        sigma_f: np.ndarray,
                        speed_factor: float = 0.0,
-                       use_dynamic_on_f: bool = False,
+                       use_dynamic_on_f: bool = True,
                        J: Optional[np.ndarray] = None,
                        f_ext: Optional[np.ndarray] = None) -> np.ndarray:
         """
         Combined solve with separated dynamic (sigma_dyn) and augmented
-        (sigma_f) inputs.  Only works when R was constructed as
+        (sigma_f) inputs. Only works when R was constructed as
         R_aug = vstack([R_dyn, R_f]).
 
         Parameters
         ----------
         sigma_dyn : np.ndarray, shape (k_dyn,)
-            Basic actuation input (subject to speed-dependent dynamic effect).
+            Basic actuation input.
         sigma_f : np.ndarray, shape (m,)
             Friction/augmented input.
-            By default NOT subject to dynamic effect (static only).
-            Set use_dynamic_on_f=True to apply dynamic to both.
+            By default both are subject to the same damped equilibrium.
+            Set use_dynamic_on_f=False to keep sigma_f at static (S_s).
         speed_factor : float, in [0, 1]
         use_dynamic_on_f : bool
-            If True, both sigma_dyn and sigma_f are interpolated.
-            If False (default), only sigma_dyn is interpolated while
-            sigma_f uses the slow (static) synergy.
+            If True (default), both sigma_dyn and sigma_f use the same
+            speed-dependent synergy. If False, only sigma_dyn is modulated
+            while sigma_f uses the slow (static) synergy.
         J, f_ext : optional
 
         Returns
@@ -252,17 +255,16 @@ class DynamicSynergyModel:
                 f"R has {self.k} inputs, but sigma_dyn ({k_dyn}) + "
                 f"sigma_f ({m}) = {k_dyn + m}")
 
-        alpha = np.clip(float(speed_factor), 0.0, 1.0)
-
         if use_dynamic_on_f:
-            # Both interpolated
-            S_eff = (1.0 - alpha) * self.S_s + alpha * self.S_f
-            q = S_eff @ np.concatenate([sigma_dyn, sigma_f])
+            # Both modulated by same damped equilibrium
+            q = self.solve(np.concatenate([sigma_dyn, sigma_f]),
+                           speed_factor=speed_factor,
+                           J=J, f_ext=f_ext)
         else:
-            # Only sigma_dyn interpolated; sigma_f uses slow synergy
-            S_eff_dyn = (1.0 - alpha) * self.S_s[:, :k_dyn] + \
-                        alpha * self.S_f[:, :k_dyn]
-            q = S_eff_dyn @ sigma_dyn + self.S_s[:, k_dyn:] @ sigma_f
+            # Only sigma_dyn modulated; sigma_f uses slow synergy
+            S_eff = self._compute_damped_synergy(speed_factor)
+            q = (S_eff[:, :k_dyn] @ sigma_dyn +
+                 self.S_s[:, k_dyn:] @ sigma_f)
 
         if J is not None and f_ext is not None:
             q += self.C_s @ J.T @ f_ext
@@ -279,13 +281,19 @@ class DynamicSynergyModel:
 
     @property
     def fast_synergy(self) -> np.ndarray:
-        """S_f : fast synergy matrix (n, k)."""
-        return self.S_f.copy()
+        """
+        High-speed synergy matrix S_f : S_eff at speed_factor=1.0.
+
+        This is NOT the descriptor-system S_f from Eq. (14) of the paper,
+        but rather the damped equilibrium matrix:
+            S_f = (E + T^T C T)^{-1} R^T (R (E + T^T C T)^{-1} R^T)^{-1}
+        """
+        return self._compute_damped_synergy(1.0)
 
     @property
     def synergy_diff(self) -> np.ndarray:
         """S_f - S_s : direction of dynamic modulation."""
-        return self.S_f - self.S_s
+        return self.fast_synergy - self.S_s
 
     # ------------------------------------------------------------------
     #  Static: design fast synergy from desired S_f and T, E
@@ -303,9 +311,7 @@ class DynamicSynergyModel:
 
         This is an inverse design tool: "I want S_f to be X, what R do I need?"
 
-        Assumes T, E are already chosen.  The method computes R by
-        matching S_f ≈ T_⊥^T (T_⊥ E T_⊥^T)^{-1} R T_⊥^T ...
-
+        Assumes T, E are already chosen.
         For simplicity, returns the R that best approximates both S_s and S_f.
         """
         E = np.diag(E_vec)

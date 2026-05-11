@@ -218,7 +218,8 @@ class DesignEvaluator:
                     design, use_augmented=True
                 )
                 result['S_s'] = dyn_model.S_s
-                result['S_f'] = dyn_model.S_f
+                result['S_f'] = dyn_model.fast_synergy
+
                 result['T_mat'] = dyn_model.T
                 result['C_diag'] = np.diag(dyn_model.C)
                 result['has_dynamic'] = dyn_model.n_d > 0
