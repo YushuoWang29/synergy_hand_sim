@@ -8,6 +8,43 @@ from .origami_design import (
 )
 
 
+def clamp_fold_angle(angle: float, fold_type: FoldType) -> float:
+    """
+    限制折痕折叠角度在物理有效范围内。
+    
+    谷折痕 (VALLEY)：正方向折叠，范围 [0, π]
+        - 0 = 展平状态
+        - π = 完全折叠（两面贴合）
+        - 不允许反折 (< 0)，不允许超过 180° (> π)
+    
+    山折痕 (MOUNTAIN)：负方向折叠，范围 [-π, 0]
+        - 0 = 展平状态
+        - -π = 完全折叠（两面贴合）
+        - 不允许反折 (> 0)，不允许超过 -180° (< -π)
+    
+    注意：山折痕和谷折痕的正方向相反。
+        谷折痕的正方向：使两面在折痕下方靠拢。
+        山折痕的正方向：使两面在折痕上方靠拢。
+    
+    Parameters
+    ----------
+    angle : float
+        原始关节角度（弧度）
+    fold_type : FoldType
+        折痕类型（VALLEY 或 MOUNTAIN）
+    
+    Returns
+    -------
+    float
+        限位后的角度值
+    """
+    if fold_type == FoldType.VALLEY:
+        return float(np.clip(angle, 0.0, np.pi))
+    elif fold_type == FoldType.MOUNTAIN:
+        return float(np.clip(angle, -np.pi, 0.0))
+    return angle
+
+
 def compute_joint_frame_in_parent(
     design: OrigamiHandDesign,
     joint: JointConnection,
@@ -178,11 +215,16 @@ class OrigamiForwardKinematics:
         给定关节角度，计算所有面片的3D位姿
         
         使用迭代松弛法处理环状约束
+        
+        注意：输入的角度会根据折痕类型自动限位：
+            - 谷折痕 (VALLEY)：范围 [0, π]，不允许反折
+            - 山折痕 (MOUNTAIN)：范围 [-π, 0]，不允许反折
         """
-        # 初始化：未指定角度默认为0
+        # 初始化：未指定角度默认为0，并根据折痕类型进行限位
         full_angles = {}
         for joint in self.design.joints:
-            full_angles[joint.id] = joint_angles.get(joint.id, 0.0)
+            raw_angle = joint_angles.get(joint.id, 0.0)
+            full_angles[joint.id] = clamp_fold_angle(raw_angle, joint.fold_type)
         
         # 第一步：沿生成树传播
         face_transforms = self._propagate_along_tree(full_angles)

@@ -142,6 +142,13 @@ def main():
     for urdf_name in sorted(urdf_to_syn_map.keys()):
         syn_idx = urdf_to_syn_map[urdf_name]
         print(f"    {urdf_name} -> syn_q[{syn_idx}]")
+    
+    # 构建 synergy index → fold_type 映射（用于限位）
+    joints, jid_to_idx = get_joint_list(design)
+    syn_idx_to_fold_type = {}
+    for joint in joints:
+        syn_idx_to_fold_type[joint.id] = joint.fold_type
+    from src.models.origami_kinematics import clamp_fold_angle
 
     # 4. 构建 Synergy 模型
     if args.dynamic:
@@ -177,10 +184,18 @@ def main():
                 use_dynamic_on_f=True  # 默认启用
             )
 
+            # 对关节角度进行限位（谷折痕[0,π]，山折痕[-π,0]）
             result = {}
             for urdf_name, syn_idx in urdf_to_syn_map.items():
                 if 0 <= syn_idx < len(q):
-                    result[urdf_name] = q[syn_idx]
+                    raw_angle = q[syn_idx]
+                    # 获取该 synergy index 对应的折痕类型
+                    fold_type = syn_idx_to_fold_type.get(syn_idx)
+                    if fold_type is not None:
+                        clamped_angle = clamp_fold_angle(raw_angle, fold_type)
+                    else:
+                        clamped_angle = raw_angle
+                    result[urdf_name] = clamped_angle
                 else:
                     result[urdf_name] = 0.0
             return result
@@ -204,10 +219,17 @@ def main():
             sigma = (theta1_rad + theta2_rad) / 2.0
             sigma_f = (theta1_rad - theta2_rad) / 2.0
             q = model.solve(sigma * np.ones(model.k), sigma_f * np.ones(model.m))
+            # 对关节角度进行限位（谷折痕[0,π]，山折痕[-π,0]）
             result = {}
             for urdf_name, syn_idx in urdf_to_syn_map.items():
                 if 0 <= syn_idx < len(q):
-                    result[urdf_name] = q[syn_idx]
+                    raw_angle = q[syn_idx]
+                    fold_type = syn_idx_to_fold_type.get(syn_idx)
+                    if fold_type is not None:
+                        clamped_angle = clamp_fold_angle(raw_angle, fold_type)
+                    else:
+                        clamped_angle = raw_angle
+                    result[urdf_name] = clamped_angle
                 else:
                     result[urdf_name] = 0.0
             return result
