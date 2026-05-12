@@ -55,6 +55,8 @@ class CadGraphicsScene(QGraphicsScene):
     hole_selected = pyqtSignal(int)      # hole id
     actuator_selected = pyqtSignal(int)  # 0 or 1 (type)
     damper_selected = pyqtSignal(int)    # damper id
+    mouse_moved = pyqtSignal(float, float)    # x, y
+    draw_mode_changed = pyqtSignal(DrawMode)  # new draw mode
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -103,6 +105,7 @@ class CadGraphicsScene(QGraphicsScene):
         self._clear_free_drawing()
         self._cancel_tendon()
         self.draw_mode = mode
+        self.draw_mode_changed.emit(mode)
 
     def get_all_fold_lines(self) -> List[FoldLine]:
         return list(self._lines.values())
@@ -294,6 +297,8 @@ class CadGraphicsScene(QGraphicsScene):
 
     def mouseMoveEvent(self, event):
         pos = event.scenePos()
+        # 发射鼠标坐标信号（用于状态栏显示）
+        self.mouse_moved.emit(pos.x(), pos.y())
         # 移动命令模式输入框
         if self._cmd_proxy:
             self._cmd_proxy.setPos(pos)

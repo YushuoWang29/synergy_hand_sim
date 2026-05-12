@@ -1,7 +1,7 @@
 # src/origami_cad/main_window.py
 import os
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from .cad_graphics_scene import CadGraphicsScene, DrawMode
 from .cad_graphics_view import CadGraphicsView
 from .property_panel import PropertyPanel
@@ -29,12 +29,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._create_toolbar()
         self._create_menus()
 
+        # 状态栏
+        self.statusBar().showMessage("准备就绪")
+
         # 信号连接
         self.scene.line_selected.connect(self._on_line_selected)
         self.scene.pulley_selected.connect(self._on_pulley_selected)
         self.scene.hole_selected.connect(self._on_hole_selected)
         self.scene.actuator_selected.connect(self._on_actuator_selected)
         self.scene.damper_selected.connect(self._on_damper_selected)
+        self.scene.draw_mode_changed.connect(self._on_draw_mode_changed)
+        self.scene.mouse_moved.connect(self._on_mouse_moved)
         self.property_panel.stiffness_changed.connect(self._on_stiffness_changed)
         self.property_panel.actuator_type_changed.connect(self._on_actuator_type_changed)
         self.property_panel.pulley_friction_changed.connect(self._on_pulley_friction_changed)
@@ -47,6 +52,40 @@ class MainWindow(QtWidgets.QMainWindow):
         self._selected_actuator_item = None
         self._selected_pulley_id = None
         self._selected_hole_id = None
+
+    # ========== 状态栏回调 ==========
+    def _on_draw_mode_changed(self, mode: DrawMode):
+        """绘图模式改变时更新状态栏"""
+        mode_names = {
+            DrawMode.SELECT: "选择模式",
+            DrawMode.DRAW_OUTLINE: "绘制轮廓线",
+            DrawMode.DRAW_MOUNTAIN: "绘制峰折线",
+            DrawMode.DRAW_VALLEY: "绘制谷折线",
+            DrawMode.PLACE_PULLEY: "放置滑轮",
+            DrawMode.PLACE_HOLE: "放置孔",
+            DrawMode.PLACE_DAMPER: "放置阻尼器",
+            DrawMode.DRAW_TENDON: "绘制腱绳",
+            DrawMode.PLACE_ACTUATOR: "放置驱动器",
+        }
+        name = mode_names.get(mode, "未知模式")
+        self.statusBar().showMessage(f"模式: {name}")
+
+    def _on_mouse_moved(self, x: float, y: float):
+        """鼠标移动时更新状态栏坐标"""
+        # 保留当前模式文本
+        mode_names = {
+            DrawMode.SELECT: "选择",
+            DrawMode.DRAW_OUTLINE: "轮廓",
+            DrawMode.DRAW_MOUNTAIN: "峰折",
+            DrawMode.DRAW_VALLEY: "谷折",
+            DrawMode.PLACE_PULLEY: "滑轮",
+            DrawMode.PLACE_HOLE: "孔",
+            DrawMode.PLACE_DAMPER: "阻尼器",
+            DrawMode.DRAW_TENDON: "腱绳",
+            DrawMode.PLACE_ACTUATOR: "驱动器",
+        }
+        mode_name = mode_names.get(self.scene.draw_mode, "未知")
+        self.statusBar().showMessage(f"模式: {mode_name}  |  坐标: ({x:.1f}, {y:.1f})")
 
     def _create_toolbar(self):
         toolbar = self.addToolBar("工具")
@@ -64,15 +103,15 @@ class MainWindow(QtWidgets.QMainWindow):
             action.triggered.connect(lambda checked, m=mode: self._set_mode(m) if checked else None)
             return action
 
-        self.select_action = add_tool("选择", DrawMode.SELECT, None)
-        self.outline_action = add_tool("轮廓线", DrawMode.DRAW_OUTLINE, None)
-        self.mountain_action = add_tool("峰折", DrawMode.DRAW_MOUNTAIN, None)
-        self.valley_action = add_tool("谷折", DrawMode.DRAW_VALLEY, None)
-        self.pulley_action = add_tool("滑轮", DrawMode.PLACE_PULLEY, None)
-        self.hole_action = add_tool("孔(橙色)", DrawMode.PLACE_HOLE, None)
-        self.damper_action = add_tool("阻尼器(浅绿)", DrawMode.PLACE_DAMPER, None)
-        self.tendon_action = add_tool("腱绳", DrawMode.DRAW_TENDON, None)
-        self.actuator_action = add_tool("驱动器", DrawMode.PLACE_ACTUATOR, None)
+        self.select_action = add_tool("选择 [Esc]", DrawMode.SELECT, Qt.Key_Escape)
+        self.outline_action = add_tool("轮廓线 [L]", DrawMode.DRAW_OUTLINE, Qt.Key_L)
+        self.mountain_action = add_tool("峰折 [M]", DrawMode.DRAW_MOUNTAIN, Qt.Key_M)
+        self.valley_action = add_tool("谷折 [V]", DrawMode.DRAW_VALLEY, Qt.Key_V)
+        self.pulley_action = add_tool("滑轮 [P]", DrawMode.PLACE_PULLEY, Qt.Key_P)
+        self.hole_action = add_tool("孔(橙色) [H]", DrawMode.PLACE_HOLE, Qt.Key_H)
+        self.damper_action = add_tool("阻尼器(浅绿) [D]", DrawMode.PLACE_DAMPER, Qt.Key_D)
+        self.tendon_action = add_tool("腱绳 [T]", DrawMode.DRAW_TENDON, Qt.Key_T)
+        self.actuator_action = add_tool("驱动器 [A]", DrawMode.PLACE_ACTUATOR, Qt.Key_A)
 
         self.select_action.setChecked(True)
 
