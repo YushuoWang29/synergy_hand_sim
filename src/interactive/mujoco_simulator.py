@@ -164,6 +164,23 @@ class MuJoCoSimulator:
 
         # asset
         lines.append('  <asset>')
+        # 棋盘格地面纹理
+        lines.append('    <texture name="checker_tex" type="2d" builtin="checker" '
+                     'rgb1="0.25 0.26 0.28" rgb2="0.35 0.36 0.38" '
+                     'width="512" height="512"/>')
+        # 地面材质
+        lines.append('    <material name="ground_mat" texture="checker_tex" '
+                     'texrepeat="6 6" reflectance="0.15"/>')
+        # 折纸手材质：亚克力/ABS塑料质感
+        lines.append('    <material name="origami_plastic" '
+                     'rgba="0.65 0.82 0.95 1.0" '
+                     'specular="0.4" shininess="0.3" '
+                     'emission="0.0" texrepeat="1 1"/>')
+        # 第二个材质用于尖部或不同颜色面片
+        lines.append('    <material name="origami_accent" '
+                     'rgba="0.75 0.85 0.98 1.0" '
+                     'specular="0.5" shininess="0.4" '
+                     'emission="0.0" texrepeat="1 1"/>')
         for name in links:
             mn = _mesh_name(name)
             if mn is not None:
@@ -181,8 +198,46 @@ class MuJoCoSimulator:
 
         lines.append('  <compiler angle="radian"/>')
         lines.append('  <option gravity="0 0 0"/>')
+        # ---- 可视化配置：背景色、渲染质量、照明 ----
+        lines.append('  <visual>')
+        # 背景色：暖灰色渐变，替代之前的巨大白色平面
+        lines.append('    <rgba haze="0.25 0.26 0.28 1.0" fog="0.25 0.26 0.28 1.0"/>')
+        # 渲染质量：开启 8x 抗锯齿、大阴影贴图
+        lines.append('    <quality offsamples="8" shadowsize="8192"/>')
+        # 前照灯：降低环境光强度，提高漫反射/镜面反射
+        lines.append('    <headlight ambient="0.15 0.15 0.18" diffuse="0.5 0.5 0.55" '
+                     'specular="0.3 0.3 0.3"/>')
+        # 雾/深景：远处颜色与背景融合
+        lines.append('    <map fogstart="5.0" fogend="15.0" haze="0.2"/>')
+        lines.append('  </visual>')
         lines.append('  <worldbody>')
-        lines.append('    <geom type="plane" size="500 500 0.1" pos="0 0 -20" rgba="1 1 1 1"/>')
+        # ---- 场景灯光（三点照明） ----
+        # 主光：左上侧暖色
+        lines.append('    <light name="key_light" directional="true" '
+                     'pos="2 1 3" dir="-2 -1 -3" '
+                     'diffuse="0.65 0.6 0.55" ambient="0.0 0.0 0.0" specular="0.5 0.5 0.5" '
+                     'castshadow="true"/>')
+        # 补光：右下侧冷色
+        lines.append('    <light name="fill_light" directional="true" '
+                     'pos="-2 -1 2" dir="2 1 -2" '
+                     'diffuse="0.35 0.4 0.5" ambient="0.0 0.0 0.0" specular="0.2 0.2 0.4" '
+                     'castshadow="true"/>')
+        # 背光：后上方勾勒边缘
+        lines.append('    <light name="back_light" directional="true" '
+                     'pos="0 -3 2" dir="0 3 -2" '
+                     'diffuse="0.25 0.25 0.3" ambient="0.0 0.0 0.0" specular="0.6 0.6 0.7" '
+                     'castshadow="true"/>')
+        # ---- 棋盘格地面（占位，加载后由 _load_model 根据模型尺寸缩放） ----
+        lines.append('    <geom type="plane" name="_bg_ground" '
+                     'size="1 1 0.02" pos="0 0 0" '
+                     'material="ground_mat" '
+                     'contype="0" conaffinity="0" group="1"/>')
+
+        # 用于在多个面片之间交替材质的计数器
+        _material_toggle = [0]  # 闭包中用 list 变通
+
+        # 手模型整体在 z 方向的偏移量（使手悬空在 z=0 的地面之上）
+        _hand_z_offset = 100.0
 
         def add_body(name, joint_info=None, indent=4):
             nonlocal joint_names
@@ -190,7 +245,10 @@ class MuJoCoSimulator:
             if joint_info is not None:
                 pos = _joint_origin_xyz(joint_info)
             else:
-                pos = '0 0 0'
+                # 根 body：在原始 pos 上加 z 偏移，使手整体上抬
+                orig_pos = '0 0 0'
+                px, py, pz = [float(v) for v in orig_pos.split()]
+                pos = f'{px} {py} {pz + _hand_z_offset}'
             lines.append(f'{pf}<body name="{name}" pos="{pos}">')
 
             if joint_info is not None:
@@ -204,8 +262,11 @@ class MuJoCoSimulator:
 
             mn = _mesh_name(name)
             if mn is not None:
+                # 交替使用两个材质，使不同面片有微妙的颜色差异
+                _material_toggle[0] += 1
+                mat = 'origami_accent' if (_material_toggle[0] % 2 == 0) else 'origami_plastic'
                 lines.append(f'{pf}  <geom type="mesh" mesh="{mn}" pos="0 0 0" '
-                             f'rgba="0.6 0.85 1.0 1.0"/>')
+                             f'material="{mat}"/>')
 
             if name in children_map:
                 for child_name, ji in children_map[name]:
@@ -311,7 +372,20 @@ class MuJoCoSimulator:
 
         # 关闭重力
         self.model.opt.gravity = (0.0, 0.0, 0.0)
-        self.model.vis.headlight.ambient[:] = (0.5, 0.5, 0.5)
+        # 渲染质量：应用高分辨率离屏渲染
+        self.model.vis.quality.offsamples = 8
+        self.model.vis.quality.shadowsize = 8192
+        # 加宽线框（方便观察关节）
+        self.model.vis.global_.linewidth = 1.5
+
+        # ---- 棋盘格地面：定位在模型中心，z=0，大小扩大 10 倍 ----
+        E = self.model.stat.extent
+        C = self.model.stat.center
+        gid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, '_bg_ground')
+        if gid >= 0:
+            self.model.geom_pos[gid] = (C[0], C[1], 0.0)
+            # 长宽从原本的 E*0.8 变为 E*8.0（扩大 10 倍）
+            self.model.geom_size[gid] = (E * 8.0, E * 8.0, 0.02)
 
         print(f"MuJoCo model loaded: nq={self.model.nq}, nv={self.model.nv}, "
               f"nbody={self.model.nbody}, njnt={self.model.njnt}, "
@@ -338,6 +412,18 @@ class MuJoCoSimulator:
             show_right_ui=show_right_ui
         )
         self._auto_align_camera()
+
+        # 启用用户场景中的 FOG 渲染标志，使 model.vis.rgba.fog 作为背景色生效
+        # 默认 mjRND_FOG (=5) 在场景标志中为 0（关闭），导致背景为纯黑
+        self._enable_bg_each_frame: bool = False
+        if hasattr(self.viewer, 'user_scn'):
+            try:
+                self.viewer.user_scn.flags[mujoco.mjtRndFlag.mjRND_FOG] = 1
+                # 标记为需要每帧重新设置，因为 viewer sync 可能重置该标志
+                self._enable_bg_each_frame = True
+            except Exception:
+                pass
+
         print("MuJoCo viewer launched.")
 
     def _auto_align_camera(self):
@@ -430,6 +516,9 @@ class MuJoCoSimulator:
 
         try:
             while self.viewer.is_running():
+                # 每帧确保 FOG 渲染标志开启（背景色由 model.vis.rgba.fog 控制）
+                if self._enable_bg_each_frame and hasattr(self.viewer, 'user_scn'):
+                    self.viewer.user_scn.flags[mujoco.mjtRndFlag.mjRND_FOG] = 1
                 if self.synergy_callback is not None and num_ctrl >= 2:
                     ctrl = self.data.ctrl.copy()
                     prev = self._prev_ctrl
