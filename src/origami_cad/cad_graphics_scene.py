@@ -198,7 +198,7 @@ class CadGraphicsScene(QGraphicsScene):
         self._tendons = tendons
         self._tendon_id = max(tendons.keys(), default=-1) + 1
 
-        # 重建图元：遍历每个腱绳，根据 pulley_sequence 中的 ID 找到对应图元，画虚线连接
+        # 重建图元：遍历每个腱绳，根据 pulley_sequence 中的 ID 找到对应图元，画实线连接
         for tid, tendon in self._tendons.items():
             permanent_lines = []
             prev_item = None
@@ -245,7 +245,7 @@ class CadGraphicsScene(QGraphicsScene):
                     line = QtWidgets.QGraphicsLineItem(QLineF(
                         prev_item.sceneBoundingRect().center(),
                         cur_item.sceneBoundingRect().center()))
-                    line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+                    line.setPen(QPen(QColor(148, 0, 211), 2))  # 紫色实线
                     line.setFlag(QGraphicsItem.ItemIsSelectable, True)
                     self.addItem(line)
                     permanent_lines.append(line)
@@ -536,7 +536,7 @@ class CadGraphicsScene(QGraphicsScene):
                     line = QtWidgets.QGraphicsLineItem(QLineF(
                         prev.sceneBoundingRect().center(),
                         item.sceneBoundingRect().center()))
-                    line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+                    line.setPen(QPen(QColor(148, 0, 211), 2))  # 紫色实线
                     line.setFlag(QGraphicsItem.ItemIsSelectable, True)
                     self.addItem(line)
                     self._tendon_temp_lines.append(line)
@@ -565,10 +565,10 @@ class CadGraphicsScene(QGraphicsScene):
         tendon = Tendon(id=self._tendon_id, pulley_sequence=seq)
         self._tendons[self._tendon_id] = tendon
 
-        # 把临时虚线变成永久虚线，并存储
+        # 把临时虚线变成永久紫色实线，并存储
         permanent_lines = []
         for line in self._tendon_temp_lines:
-            line.setPen(QPen(Qt.darkGray, 1, Qt.DashLine))
+            line.setPen(QPen(QColor(148, 0, 211), 2))  # 紫色实线
             line.setFlag(QGraphicsItem.ItemIsSelectable, True)
             permanent_lines.append(line)
         self._tendon_graphics[self._tendon_id] = permanent_lines

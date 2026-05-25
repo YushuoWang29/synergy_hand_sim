@@ -30,7 +30,8 @@ import numpy as np
 
 from src.models.origami_design import OrigamiHandDesign
 from src.models.transmission_builder import (
-    build_synergy_model, build_dynamic_synergy_model, get_joint_list
+    build_synergy_model, build_dynamic_synergy_model, get_joint_list,
+    build_one_sided_synergy_model, solve_one_sided,
 )
 from src.interactive.mujoco_simulator import MuJoCoSimulator
 
@@ -171,8 +172,12 @@ def main():
         print(f"  Speed 滑块范围: 0 ~ 10 rad/s (滑块值为 0~10 对应 speed_factor=0~1)")
 
         def synergy_callback(theta1_rad, theta2_rad, speed_rad_s=0.0):
-            sigma = (theta1_rad + theta2_rad) / 2.0
-            sigma_f = (theta1_rad - theta2_rad) / 2.0
+            # Slack 钳位：负值 → 0（腱绳不能受推）
+            theta_A = max(0.0, float(theta1_rad))
+            theta_B = max(0.0, float(theta2_rad))
+            
+            sigma = (theta_A + theta_B) / 2.0
+            sigma_f = (theta_A - theta_B) / 2.0
 
             # Speed 滑块值直接映射为 speed_factor (0~10 rad/s → 0~1)
             speed_factor = np.clip(speed_rad_s / 10.0, 0.0, 1.0)
@@ -207,19 +212,50 @@ def main():
         print("  → Speed 中间值: 平滑插值")
 
     else:
-        # 标准准静态模式（原始行为不变）
+        # 新标准模式：使用单侧协同模型（解决问题 2 和 3）
+        # 解决问题 2：负马达值 → slack（钳位为 0），不产生运动
+        # 解决问题 3：单马达激活时使用纯 R_A 或 R_B，确保从激活马达出发单调衰减
+        
+        # 构建单侧模型（用于 slack 处理 + 独立马达驱动）
+        one_sided_info = build_one_sided_synergy_model(design)
+        # 同时构建原始增强协同模型用于 sigma/sigma_f 滑块（双马达同向时启用）
         model, joint_stiffness = build_synergy_model(design)
-        print(f"\n  R (shape={model.R_aug[:model.k].shape}):\n", model.R_aug[:model.k])
+        print(f"\n  原始增强模型:")
+        print(f"  R (shape={model.R_aug[:model.k].shape}):\n", model.R_aug[:model.k])
         print(f"  Rf (shape={model.R_aug[model.k:].shape}):\n", model.R_aug[model.k:])
         print(f"\n  S_aug (synergy directions, shape={model.S_aug.shape}):")
         for i in range(model.S_aug.shape[1]):
             vec = model.S_aug[:, i]
             print(f"    Dir {i}: {vec}")
+        print(f"\n  === Slack & 单侧独立驱动已启用 ===")
+        print(f"  → 负的电机值被视为松弛，钳位为 0")
+        print(f"  → 单马达驱动时按 Capstan 衰减单调递减")
+        print(f"  → 双马达同向时使用增强协同模型")
 
         def synergy_callback(theta1_rad, theta2_rad, speed_rad_s=0.0):
-            sigma = (theta1_rad + theta2_rad) / 2.0
-            sigma_f = (theta1_rad - theta2_rad) / 2.0
-            q = model.solve(sigma * np.ones(model.k), sigma_f * np.ones(model.m))
+            # Slack 钳位：负值 → 0（腱绳不能受推）
+            theta_A = max(0.0, float(theta1_rad))
+            theta_B = max(0.0, float(theta2_rad))
+            
+            only_A = (theta_A > 1e-10 and theta_B <= 1e-10)
+            only_B = (theta_B > 1e-10 and theta_A <= 1e-10)
+            both_active = (theta_A > 1e-10 and theta_B > 1e-10)
+            
+            if both_active:
+                # 双马达同向 → 使用增强协同模型
+                sigma = (theta_A + theta_B) / 2.0
+                sigma_f = (theta_A - theta_B) / 2.0
+                q = model.solve(sigma * np.ones(model.k), sigma_f * np.ones(model.m))
+            elif only_A:
+                # 仅 Motor A 激活 → 使用 R_A（从 MotorA 出发单调递减）
+                q = solve_one_sided(theta_A, 0.0, one_sided_info)
+            elif only_B:
+                # 仅 Motor B 激活 → 使用 R_B（从 MotorB 出发单调递减）
+                q = solve_one_sided(0.0, theta_B, one_sided_info)
+            else:
+                # 双马达都松弛 → 无运动
+                q = np.zeros(one_sided_info['n_joints'])
+            
             # 对关节角度进行限位（谷折痕[0,π]，山折痕[-π,0]）
             result = {}
             for urdf_name, syn_idx in urdf_to_syn_map.items():

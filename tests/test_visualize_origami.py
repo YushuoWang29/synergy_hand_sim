@@ -1,11 +1,13 @@
 # tests/test_visualize_origami.py
+# NOTE: MeshCat-based OrigamiVisualizer has been removed from the project.
+# This test is disabled. Use MuJoCo-based visualization instead.
 
 import sys
 sys.path.insert(0, '.')
 
 from src.models.origami_design import *
 from src.models.origami_kinematics import OrigamiForwardKinematics
-from src.visualization.origami_visualizer import OrigamiVisualizer
+
 import numpy as np
 
 
@@ -51,23 +53,6 @@ if __name__ == "__main__":
     print("Creating forward kinematics...")
     fk = OrigamiForwardKinematics(design)
     
-    print("Starting visualizer...")
-    viz = OrigamiVisualizer()
-    
-    # 手动打开浏览器（解决自动打开问题）
-    viz.open_browser()
-    
-    # 给MeshCat一点时间初始化
-    import time
-    time.sleep(1.0)
-    
-    # 显示展开状态
-    print("Displaying flat state...")
-    viz.display_hand(fk, {})
-    
-    input("Press Enter to fold to 90°...")
-    viz.animate_folding(fk, 0, 0.0, np.pi/2, steps=30)
-    
-    input("Press Enter to exit...")
-    
+    # MeshCat-based OrigamiVisualizer removed; use MuJoCo for 3D visualization.
+    print("\n  [MeshCat removed] Use MuJoCo simulator for 3D visualization.")
     print("Done!")

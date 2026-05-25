@@ -1,9 +1,21 @@
 # src/interactive/origami_simulator.py
+"""
+Origami hand interactive simulator.
+
+NOTE: MeshCat-based OrigamiVisualizer has been removed from this project.
+This simulator previously used OrigamiVisualizer for 3D viewing (MeshCat + browser).
+For 3D visualization, please use the MuJoCo-based simulator instead:
+
+    from src.interactive.mujoco_simulator import MuJoCoSimulator
+
+This file is kept for its 2D CAD viewer component (CADViewer + PyQt5 GUI),
+which is still functional for interactive joint angle control.
+"""
 
 import sys
 import numpy as np
 import matplotlib
-matplotlib.use('Qt5Agg')  # 必须在import pyplot之前
+matplotlib.use('Qt5Agg')  # Must be before importing pyplot
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -13,7 +25,6 @@ import time
 
 from src.models.origami_design import OrigamiHandDesign, FoldType
 from src.models.origami_kinematics import OrigamiForwardKinematics
-from src.visualization.origami_visualizer import OrigamiVisualizer
 from src.interactive.cad_viewer import CADViewer
 
 
@@ -39,19 +50,12 @@ class OrigamiSimulator(QtWidgets.QMainWindow):
         for joint in design.joints:
             self._line_to_joint_map[joint.fold_line_id] = joint.id
         
-        # 3D可视化器
-        self.viz_3d = OrigamiVisualizer()
+        # 3D可视化器 (MeshCat removed - use MuJoCo for 3D rendering)
+        self.viz_3d = None  # OrigamiVisualizer removed
         
         # 初始化UI
         self._init_ui()
-        self._init_3d_view()
         
-        # 定时刷新3D视图
-        self._last_angles = {}
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self._update_3d)
-        self.timer.start(50)
-    
     def _init_ui(self):
         """初始化界面"""
         self.setWindowTitle("Origami Hand Simulator")
@@ -177,14 +181,6 @@ class OrigamiSimulator(QtWidgets.QMainWindow):
         
         self._update_joints_display()
     
-    def _init_3d_view(self):
-        """初始化3D视图"""
-        self.viz_3d.open_browser()
-        time.sleep(1.5)
-        self.viz_3d.display_hand(self.fk, self.joint_angles)
-        self._last_angles = self.joint_angles.copy()
-        
-    
     def _on_line_selected(self, line_id, fold_type):
         """选中折痕回调"""
         self.selected_line_id = line_id
@@ -239,11 +235,6 @@ class OrigamiSimulator(QtWidgets.QMainWindow):
             lines.append(f"{sym} J{j.id} | L{j.fold_line_id} | {deg:+6.1f}°{marker}")
         self.joints_text.setText("\n".join(lines))
     
-    def _update_3d(self):
-        if self.joint_angles != self._last_angles:
-            self.viz_3d.display_hand(self.fk, self.joint_angles)
-            self._last_angles = self.joint_angles.copy()
-    
     def _on_key_press(self, event):
         if self.selected_line_id is None:
             return
@@ -294,5 +285,4 @@ class OrigamiSimulator(QtWidgets.QMainWindow):
         self._update_joints_display()
     
     def closeEvent(self, event):
-        self.timer.stop()
         event.accept()

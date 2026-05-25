@@ -1,8 +1,7 @@
-# src/interactive/pinocchio_simulator.py
 """
 基于 Pinocchio 的交互式 URDF 仿真器
 左侧：2D CAD 视图（点击选折痕）
-右侧：3D MeshCat 视图（Pinocchio 实时更新）
+右侧：控制面板（仅 Pinocchio 计算，去除 MeshCat 可视化）
 """
 
 import sys
@@ -18,14 +17,13 @@ import time
 import os
 
 import pinocchio as pin
-from pinocchio.visualize import MeshcatVisualizer
 
 from src.models.origami_design import OrigamiHandDesign, FoldType
 from src.interactive.cad_viewer import CADViewer
 
 
 class PinocchioSimulator(QtWidgets.QMainWindow):
-    """基于 Pinocchio 的折纸手交互式仿真器"""
+    """基于 Pinocchio 的折纸手交互式仿真器（无 3D MeshCat 可视化）"""
 
     def __init__(self, design: OrigamiHandDesign, urdf_path: str, mesh_dir: str):
         super().__init__()
@@ -39,59 +37,40 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
 
         # 当前关节角度（弧度）
         self.joint_angles: Dict[int, float] = {}
-        # 初始化所有实际关节为 0
         for i in range(1, self.model.njoints):
             if self.model.joints[i].nq == 1:
                 self.joint_angles[i] = 0.0
-        # Pinocchio 配置向量
         self.q = pin.neutral(self.model)
 
         # 选中的折痕 → Pinocchio joint index 映射
         self.selected_line_id: Optional[int] = None
-        self._line_to_pin_joint: Dict[int, int] = {}  # line_id → pin_joint_idx
+        self._line_to_pin_joint: Dict[int, int] = {}
 
-        # 建立映射：从 URDF joint name 反推 line_id
-        # URDF joint 名格式：joint_{joint_id}，joint_id 对应 design.joints 的 id
         for design_joint in self.design.joints:
             fold_line_id = design_joint.fold_line_id
             urdf_joint_name = f"joint_{design_joint.id}"
-            # 在 Pinocchio model 中搜索这个 joint name
             for pin_j in range(1, self.model.njoints):
                 if self.model.names[pin_j] == urdf_joint_name:
                     self._line_to_pin_joint[fold_line_id] = pin_j
                     break
 
-        # 3D 可视化器
-        self._init_3d_view()
-
         # 初始化 UI
         self._init_ui()
 
-        # 定时刷新 3D
-        self._last_q = self.q.copy()
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self._update_3d)
-        self.timer.start(50)  # 20 fps
-
     def _load_model(self):
-        """加载 Pinocchio 模型"""
-        # 如果 mesh 路径是相对的，先转换为绝对路径
         urdf_dir = os.path.dirname(os.path.abspath(self.urdf_path))
         mesh_abs = os.path.abspath(self.mesh_dir)
 
-        # 读取 URDF 内容，替换相对 mesh 路径
         with open(self.urdf_path, 'r') as f:
             urdf_content = f.read()
         urdf_content = urdf_content.replace('meshes/', mesh_abs.replace('\\', '/') + '/')
 
-        # 写临时文件
         import tempfile
         tmp = tempfile.NamedTemporaryFile(suffix='.urdf', delete=False, mode='w')
         tmp.write(urdf_content)
         tmp.close()
         self._tmp_urdf = tmp.name
 
-        # 用 Pinocchio 加载
         self.model = pin.buildModelFromUrdf(self._tmp_urdf)
         self.data = self.model.createData()
         self.visual_model = pin.buildGeomFromUrdf(
@@ -105,18 +84,7 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
             if nq == 1:
                 print(f"  [{i}] {name} (revolute)")
 
-    def _init_3d_view(self):
-        """初始化 MeshCat 3D 视图"""
-        # 创建空的 collision model（我们不需要碰撞检测）
-        collision_model = pin.GeometryModel()
-        
-        self.viz = MeshcatVisualizer(self.model, collision_model, self.visual_model)
-        self.viz.initViewer(open=True)
-        self.viz.loadViewerModel()
-        self.viz.display(self.q)
-
     def _init_ui(self):
-        """初始化界面"""
         self.setWindowTitle("Origami Pinocchio Simulator")
         self.setMinimumSize(1200, 700)
 
@@ -237,7 +205,6 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
         pin_joint = self._line_to_pin_joint.get(line_id)
 
         if pin_joint is not None:
-            # 从 Pinocchio 配置向量读取当前角度
             idx_q = self.model.idx_qs[pin_joint]
             angle_rad = self.q[idx_q]
             angle_deg = np.degrees(angle_rad)
@@ -273,7 +240,6 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
         pin_joint = self._line_to_pin_joint.get(self.selected_line_id)
         if pin_joint is None:
             return
-
         idx_q = self.model.idx_qs[pin_joint]
         self.q[idx_q] = np.radians(angle_deg)
         self.angle_label.setText(f"{angle_deg:.1f}°")
@@ -290,18 +256,12 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
             lines.append(f"{sym} L{line_id} → PJ{pin_j} | {deg:+6.1f}°{marker}")
         self.joints_text.setText("\n".join(lines))
 
-    def _update_3d(self):
-        if not np.array_equal(self.q, self._last_q):
-            self.viz.display(self.q)
-            self._last_q = self.q.copy()
-
     def _on_key_press(self, event):
         if self.selected_line_id is None:
             return
         pin_joint = self._line_to_pin_joint.get(self.selected_line_id)
         if pin_joint is None:
             return
-
         idx_q = self.model.idx_qs[pin_joint]
         current = np.degrees(self.q[idx_q])
         key = event.key()
@@ -345,8 +305,6 @@ class PinocchioSimulator(QtWidgets.QMainWindow):
         self._update_joints_display()
 
     def closeEvent(self, event):
-        self.timer.stop()
-        # 清理临时 URDF
         try:
             os.unlink(self._tmp_urdf)
         except:

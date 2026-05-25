@@ -15,11 +15,14 @@
 - [增强自适应协同 (Augmented Adaptive Synergy)](#增强自适应协同-augmented-adaptive-synergy)
 - [孔类腱绳传动 (Hole Transmission)](#孔类腱绳传动-hole-transmission)
 - [摩擦模型分析 (Friction Analysis)](#摩擦模型分析-friction-analysis)
+- [数值仿真框架 (Numerical Simulation)](#数值仿真框架-numerical-simulation)
 - [优化框架 (Optimization)](#优化框架-optimization)
 - [Origami CAD 编辑器](#origami-cad-编辑器-srcorigami_cad)
 - [测试文件](#测试文件)
 - [用法示例](#用法示例)
 - [DXF 绘图规范](#dxf-绘图规范)
+- [参考文献](#参考文献)
+
 
 ---
 
@@ -92,7 +95,27 @@ conda run -n synergy_hand_sim python -m pytest tests/test_dynamic_synergy_extend
 conda run -n synergy_hand_sim python tests/test_dynamic_synergy_extended.py
 ```
 
-### 7. 优化设计
+### 7. 力学仿真框架 — Phase 2 动力学 (自行实现，无 MuJoCo)
+
+```bash
+# 从 .ohd 运行完整的二阶动力学 ODE 仿真
+conda run -n synergy_hand_sim python -c "
+import sys, numpy as np; sys.path.insert(0,'.')
+from src.models.origami_design import OrigamiHandDesign
+from src.simulation.config import SimulationConfig
+from src.simulation.simulator import HandSimulator
+design = OrigamiHandDesign.load('models/ohd test/ohd_1.ohd')
+cfg = SimulationConfig(dt=1e-4, t_end=0.1, phase=2, verbose=0)
+sim = HandSimulator(design, cfg)
+traj = sim.run(timeout=10.0)
+print(f'{traj.n_steps} steps, final q={traj.q[-1]}')
+"
+
+# 运行全套力学仿真测试 (30 项)
+conda run -n synergy_hand_sim python -m pytest src/simulation/tests/test_all.py -v
+```
+
+### 8. 优化设计
 
 ```bash
 python scripts/run_optimization.py
@@ -154,12 +177,29 @@ synergy_hand_sim/
 │   │   ├── origami_simulator.py      # 自研运动学仿真器：Qt GUI，整合2D+3D交互
 │   │   └── pinocchio_simulator.py    # Pinocchio仿真器：基于URDF的交互式仿真
 │   │
+│   ├── simulation/              # 力学仿真框架 (src/simulation/)
+│   │   ├── __init__.py              # 包入口，统一导出
+│   │   ├── config.py                # SimulationConfig：仿真参数配置（dt、t_end、phase等）
+│   │   ├── rigid_body.py            # LinkInertia, RigidBodySystem：刚体惯量参数估计
+│   │   ├── transmission_force.py    # 腱绳传动矩阵构建：M矩阵、R̄、粘滞阻尼、静摩擦、Q矩阵
+│   │   ├── friction_models.py       # HaywardArmstrongFriction, CapstanTensionDistribution
+│   │   ├── dynamics.py              # DynamicsAssembler：动力学方程装配（Eq.43-44）
+│   │   ├── integrator.py            # ODEState, DynamicsODE, Integrator（RK4/Euler/scipy）
+│   │   ├── quasi_static.py          # QuasiStaticSolver：准静态力平衡求解器（Phase 1）
+│   │   ├── contact_model.py         # ContactModel：惩罚法接触 + 库仑摩擦（Phase 3）
+│   │   ├── simulator.py             # HandSimulator：顶层编排引擎，SimulationTrajectory
+│   │   ├── io.py                    # SimulationWriter/Reader：结果序列化（.npz）
+│   │   └── tests/                   # 测试文件
+│   │       ├── test_all.py              # 30项测试（6单元+9集成+3论文+1IO+1仿真）
+│   │       └── test_integration_real.py # 真实 .ohd 集成验证（6步流水线）
+│   │
 │   └── origami_cad/              # CAD 图形化编辑器
 │       ├── cad_graphics_scene.py     # QGraphicsScene 核心
 │       ├── cad_graphics_view.py      # QGraphicsView 交互
 │       ├── main_window.py            # 主窗口
 │       └── property_panel.py         # 属性面板
 │
+
 ├── models/                       # 导出的URDF模型
 │   ├── ohd_1...ohd_8/               # ohd 设计的 URDF+STL
 │   ├── test_1...test_4/
@@ -706,6 +746,107 @@ $$\tau(q) = T \cdot \text{arm}(q)$$
 - R 的 U-shape 比率（中指 vs 两端）
 - R_f 的极化方向（左正右负）
 - 死区元素数量
+
+---
+
+## 数值仿真框架 (Numerical Simulation)
+
+`src/simulation/` 包实现从纯几何仿真到完整力学仿真的升级，基于 Della Santina et al. (2018) TRO Eq.43-44 的动力学方程。详细技术设计见 `docs/numerical_simulation.md`。
+
+### 三层递进架构
+
+| 阶段 | 描述 | 核心方程 | 数值方法 |
+|---|---|---|---|
+| **Phase 1** 准静态力平衡 | `f(q) = 0`，无时间演化 | $Kq = Q(q)u$ | `scipy.optimize.root` (hybr) |
+| **Phase 2** 完整动力学 | ODE 积分，含惯性与阻尼 | $M(q)\ddot{q} + B\dot{q} + Kq = Q(q)u$ | RK4 / scipy RK45 |
+| **Phase 3** 动力学+接触 | 惩罚法接触 + 库仑摩擦 | $M\ddot{q} = \tau_{ext} - B\dot{q} - Kq + J^T f_c$ | RK4 + 罚函数 |
+
+### 模块总览
+
+| 模块 | 类/函数 | 说明 |
+|---|---|---|
+| `config.py` | `SimulationConfig` | 仿真参数：dt、t_end、phase、tolerance、record_every、timeout |
+| `rigid_body.py` | `LinkInertia`, `RigidBodySystem`, `estimate_link_inertia()` | 刚体惯性参数，从面片几何估计质量/惯量 |
+| `transmission_force.py` | `build_M_matrix()`, `build_R_bar_matrix()`, `build_viscous_damping_matrix()`, `build_static_friction_matrix()`, `build_N_matrix()`, `compute_Q_matrix()` | 腱绳传动矩阵构建与力学量计算 |
+| `friction_models.py` | `HaywardArmstrongFriction`, `CapstanTensionDistribution` | Hayward-Armstrong 连续静摩擦模型，Capstan 指数衰减 |
+| `dynamics.py` | `DynamicsAssembler` | 动力学方程装配器：`B(q) q̈ + W q̇ + Γ = Q u + J^T f_ext` |
+| `integrator.py` | `ODEState`, `DynamicsODE`, `Integrator` | 数值积分器（RK4, Euler, scipy RK45 包装） |
+| `quasi_static.py` | `QuasiStaticSolver`, `QuasiStaticResult` | 准静态力平衡非线性求解器 |
+| `contact_model.py` | `ContactModel`, `ContactPoint`, `ContactForce` | 惩罚法接触 + 库仑摩擦（Phase 3） |
+| `simulator.py` | `HandSimulator`, `SimulationTrajectory` | 顶层仿真引擎，编排三个阶段的运行 |
+| `io.py` | `SimulationWriter`, `SimulationReader` | 仿真结果序列化（.npz）+ 后处理加载 |
+
+### 动力学方程（Della Santina et al. 2018, Eq.43-44）
+
+$$B(q) \ddot{q} + (W + C(q, \dot{q})) \dot{q} + K q = \underbrace{Q(q) u}_{\text{肌肉驱动力}} + \underbrace{J(q)^T f_{\text{ext}}}_{\text{接触力}} + \underbrace{\Gamma(q, \dot{q}, u)}_{\text{摩擦}}$$
+
+本框架当前实现线性化版本（适用于低速、小变形仿真）:
+
+$$M(q) \ddot{q} + B \dot{q} + K q = \tau_t(q, u)$$
+
+其中：
+- $M(q)$：惯性矩阵（由 `DynamicsAssembler` 从 `RigidBodySystem` 构建）
+- $B$：粘性阻尼对角矩阵
+- $K$：关节刚度对角矩阵
+- $\tau_t = Q(q) u$：腱绳传动产生的关节驱动力矩
+
+### 使用示例
+
+```python
+from src.simulation.config import SimulationConfig
+from src.simulation.simulator import HandSimulator
+from src.simulation.quasi_static import QuasiStaticSolver
+from src.simulation.dynamics import DynamicsAssembler
+from src.models.origami_design import OrigamiHandDesign
+
+# 加载设计
+design = OrigamiHandDesign.load('models/ohd test/ohd_1.ohd')
+
+# Phase 1: 准静态力平衡
+cfg = SimulationConfig(phase=1, tol=1e-8, max_iter=50)
+sim = HandSimulator(design, cfg)
+result = sim.run_quasistatic(q0=np.zeros(sim.n_joints), u=np.array([5.0]))
+print(f'Converged: {result.converged}, q={result.q}')
+
+# Phase 2: 完整动力学
+cfg = SimulationConfig(dt=1e-4, t_end=0.1, phase=2)
+sim = HandSimulator(design, cfg)
+traj = sim.run(timeout=30.0)
+print(f'Steps: {traj.n_steps}, Final q: {traj.q[-1]}')
+
+# Phase 3: 动力学 + 接触（启用接触模型）
+cfg = SimulationConfig(dt=1e-4, t_end=0.1, phase=3, enable_contact=True)
+sim = HandSimulator(design, cfg)
+traj = sim.run(timeout=30.0)
+```
+
+### 关键公式索引
+
+| 论文公式 | 文件/函数 | 说明 |
+|---|---|---|
+| Eq.43-44 | `dynamics.py` `DynamicsAssembler.assemble()` | 完整动力学方程 |
+| Eq.29 ($\tau = Q u$) | `transmission_force.py` `compute_Q_matrix()` | 腱绳力矩到关节空间映射 |
+| Eq.11 ($M(q)$) | `dynamics.py` `DynamicsAssembler` | 惯性矩阵 |
+| Eq.13 ($C(q,\dot{q})$) | — | 科里奥利力（当前忽略，低速近似） |
+| Eq.18 ($\Gamma$) | `friction_models.py` `HaywardArmstrongFriction` | 关节摩擦模型 |
+| Capstan 模型 | `friction_models.py` `CapstanTensionDistribution` | 腱绳-滑轮摩擦衰减 |
+| 惩罚接触 $f_n = k \max(0, -\phi)$ | `contact_model.py` `ContactModel.compute_force()` | 法向接触力 |
+| 库仑摩擦 $f_t \leq \mu f_n$ | `contact_model.py` `ContactModel.compute_force()` | 切向摩擦力 |
+| RK4 积分 | `integrator.py` `Integrator.rk4_step()` | 四阶龙格-库塔 |
+| 准静态残差 | `quasi_static.py` `QuasiStaticSolver._residual()` | $f(q) = Kq - Q(q)u$ |
+
+### 测试策略
+
+运行全套 30 项测试：
+
+```bash
+conda run -n synergy_hand_sim python -m pytest src/simulation/tests/test_all.py -v
+```
+
+测试覆盖率：
+- 6 单元测试：配置检测、惯性估计、摩擦模型、ODE状态、Q矩阵、动力学装配
+- 9 集成测试：粘性阻尼、零加速度、RK4精度、准静态弹簧、接触力、仿真器、IO 往返
+- 3 论文复现场景：准静态、σ_f 差动、σ 模式重力
 
 ---
 

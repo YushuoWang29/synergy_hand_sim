@@ -1,0 +1,4 @@
+PisaIIT_SoftHand_0.pdf   是hand synergy的工程化实现
+Toward_Dexterous_Manipulation_With_Augmented_Adaptive_Synergies_The_Pisa_IIT_SoftHand_2 是synergy向上更进一步，提出augmented synergy的文章
+Electromyography data for non-invasive naturally-controlled robotic hand prostheses  Scientific Dat.pdf  是Ninapro数据集的介绍论文
+nihms922186.pdf  是synergy理论的奠基性论文

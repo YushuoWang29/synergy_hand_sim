@@ -10,6 +10,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_0.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_1">
     <visual>
@@ -18,6 +23,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_1.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_2">
     <visual>
@@ -26,6 +36,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_2.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_3">
     <visual>
@@ -34,6 +49,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_3.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_4">
     <visual>
@@ -42,6 +62,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_4.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_5">
     <visual>
@@ -50,6 +75,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_5.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_6">
     <visual>
@@ -58,6 +88,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_6.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_7">
     <visual>
@@ -66,6 +101,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_7.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_8">
     <visual>
@@ -74,6 +114,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_8.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_9">
     <visual>
@@ -82,6 +127,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_9.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_10">
     <visual>
@@ -90,6 +140,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_10.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_11">
     <visual>
@@ -98,6 +153,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_11.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_12">
     <visual>
@@ -106,6 +166,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_12.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_13">
     <visual>
@@ -114,6 +179,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_13.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_14">
     <visual>
@@ -122,6 +192,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_14.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <link name="face_15">
     <visual>
@@ -130,6 +205,11 @@
       </geometry>
       <material name="face_material"/>
     </visual>
+    <collision>
+      <geometry>
+        <mesh filename="meshes/face_15.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
   </link>
   <joint name="joint_0" type="revolute">
     <parent link="face_0"/>

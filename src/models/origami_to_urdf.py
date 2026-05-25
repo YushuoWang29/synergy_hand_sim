@@ -170,6 +170,11 @@ def export_urdf(design: OrigamiHandDesign, output_path: str, thickness: float = 
         lines.append('      </geometry>')
         lines.append('      <material name="face_material"/>')
         lines.append('    </visual>')
+        lines.append('    <collision>')
+        lines.append('      <geometry>')
+        lines.append(f'        <mesh filename="meshes/face_{face_id}.stl" scale="1.0 1.0 1.0"/>')
+        lines.append('      </geometry>')
+        lines.append('    </collision>')
         lines.append('  </link>')
     
     for joint in design.joints:

@@ -1,0 +1,651 @@
+{
+  "name": "untitled",
+  "material_thickness": 3.0,
+  "fold_lines": [
+    {
+      "id": 3,
+      "start": {
+        "x": 0.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 4,
+      "start": {
+        "x": 0.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 0.0,
+        "y": 190.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 6,
+      "start": {
+        "x": 30.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 100.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 7,
+      "start": {
+        "x": 30.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 70.0,
+        "y": 100.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 8,
+      "start": {
+        "x": 70.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 70.0,
+        "y": 190.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 10,
+      "start": {
+        "x": 100.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 14,
+      "start": {
+        "x": 30.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 0.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 16,
+      "start": {
+        "x": 0.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 100.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 17,
+      "start": {
+        "x": 70.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 19,
+      "start": {
+        "x": 0.0,
+        "y": 145.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 145.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 20,
+      "start": {
+        "x": 70.0,
+        "y": 145.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 145.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 23,
+      "start": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 0.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 24,
+      "start": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 30.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 25,
+      "start": {
+        "x": 100.0,
+        "y": 30.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 0.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 26,
+      "start": {
+        "x": 0.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 0.0,
+        "y": 235.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 27,
+      "start": {
+        "x": 0.0,
+        "y": 235.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 235.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 28,
+      "start": {
+        "x": 30.0,
+        "y": 235.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 190.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 29,
+      "start": {
+        "x": 70.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 70.0,
+        "y": 235.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 30,
+      "start": {
+        "x": 70.0,
+        "y": 235.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 235.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 31,
+      "start": {
+        "x": 100.0,
+        "y": 235.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 190.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 32,
+      "start": {
+        "x": 100.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 235.0,
+        "y": 0.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 33,
+      "start": {
+        "x": 235.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 235.0,
+        "y": 30.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 34,
+      "start": {
+        "x": 235.0,
+        "y": 30.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 30.0
+      },
+      "fold_type": "outline",
+      "stiffness": 1.0
+    },
+    {
+      "id": 35,
+      "start": {
+        "x": 0.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 30.0,
+        "y": 190.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 36,
+      "start": {
+        "x": 70.0,
+        "y": 190.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 190.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 37,
+      "start": {
+        "x": 145.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 145.0,
+        "y": 30.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    },
+    {
+      "id": 38,
+      "start": {
+        "x": 190.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 190.0,
+        "y": 30.0
+      },
+      "fold_type": "valley",
+      "stiffness": 1.0
+    }
+  ],
+  "faces": [],
+  "joints": [],
+  "root_face_id": null,
+  "face_parent": {},
+  "pulleys": [
+    {
+      "id": 5,
+      "position": {
+        "x": 10.0,
+        "y": 100.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 16
+    },
+    {
+      "id": 6,
+      "position": {
+        "x": 20.0,
+        "y": 100.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 16
+    },
+    {
+      "id": 7,
+      "position": {
+        "x": 10.0,
+        "y": 145.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 19
+    },
+    {
+      "id": 8,
+      "position": {
+        "x": 20.0,
+        "y": 145.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 19
+    },
+    {
+      "id": 10,
+      "position": {
+        "x": 80.0,
+        "y": 100.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 17
+    },
+    {
+      "id": 11,
+      "position": {
+        "x": 90.0,
+        "y": 100.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 17
+    },
+    {
+      "id": 12,
+      "position": {
+        "x": 80.0,
+        "y": 145.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 20
+    },
+    {
+      "id": 13,
+      "position": {
+        "x": 90.0,
+        "y": 145.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 20
+    },
+    {
+      "id": 17,
+      "position": {
+        "x": 10.0,
+        "y": 190.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 35
+    },
+    {
+      "id": 18,
+      "position": {
+        "x": 20.0,
+        "y": 190.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 35
+    },
+    {
+      "id": 19,
+      "position": {
+        "x": 80.0,
+        "y": 190.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 36
+    },
+    {
+      "id": 20,
+      "position": {
+        "x": 90.0,
+        "y": 190.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 36
+    },
+    {
+      "id": 21,
+      "position": {
+        "x": 100.0,
+        "y": 10.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 25
+    },
+    {
+      "id": 22,
+      "position": {
+        "x": 100.0,
+        "y": 20.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 25
+    },
+    {
+      "id": 23,
+      "position": {
+        "x": 145.0,
+        "y": 10.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 37
+    },
+    {
+      "id": 24,
+      "position": {
+        "x": 145.0,
+        "y": 20.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 37
+    },
+    {
+      "id": 25,
+      "position": {
+        "x": 190.0,
+        "y": 10.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 38
+    },
+    {
+      "id": 26,
+      "position": {
+        "x": 190.0,
+        "y": 20.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": 38
+    },
+    {
+      "id": 27,
+      "position": {
+        "x": 15.0,
+        "y": 210.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": null
+    },
+    {
+      "id": 28,
+      "position": {
+        "x": 85.0,
+        "y": 210.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": null
+    },
+    {
+      "id": 29,
+      "position": {
+        "x": 210.0,
+        "y": 15.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": null
+    },
+    {
+      "id": 32,
+      "position": {
+        "x": 90.0,
+        "y": 20.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": null
+    },
+    {
+      "id": 33,
+      "position": {
+        "x": 10.0,
+        "y": 10.0
+      },
+      "radius": 3.5,
+      "friction_coefficient": 0.3,
+      "attached_fold_line_id": null
+    }
+  ],
+  "holes": [],
+  "dampers": [],
+  "tendons": [
+    {
+      "id": 2,
+      "pulley_sequence": [
+        -1,
+        6,
+        8,
+        18,
+        27,
+        17,
+        7,
+        5,
+        33,
+        21,
+        23,
+        25,
+        29,
+        26,
+        24,
+        22,
+        32,
+        11,
+        13,
+        20,
+        28,
+        19,
+        12,
+        10,
+        -2
+      ]
+    }
+  ],
+  "actuators": [
+    {
+      "id": 0,
+      "name": "Motor_A",
+      "displacement": 0.0
+    },
+    {
+      "id": 1,
+      "name": "Motor_B",
+      "displacement": 0.0
+    }
+  ],
+  "actuator_positions": [
+    {
+      "type": 0,
+      "x": 20.0,
+      "y": 50.0
+    },
+    {
+      "type": 1,
+      "x": 80.0,
+      "y": 50.0
+    }
+  ]
+}

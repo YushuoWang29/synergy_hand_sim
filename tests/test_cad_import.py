@@ -14,7 +14,7 @@ import numpy as np
 import os
 from src.models.origami_parser import OrigamiParser
 from src.models.origami_kinematics import OrigamiForwardKinematics
-from src.visualization.origami_visualizer import OrigamiVisualizer
+# Note: MeshCat-based OrigamiVisualizer removed in favor of MuJoCo
 
 
 def create_test_dxf(output_path: str):
@@ -142,33 +142,10 @@ def main():
     print("=" * 60)
     fk = OrigamiForwardKinematics(design)
     
-    # 6. 可视化
-    print("\nStarting visualizer...")
-    viz = OrigamiVisualizer()
-    viz.open_browser()
-    
-    import time
-    time.sleep(1.0)
-    
-    # 显示展开状态
-    print("Displaying flat state (all joints at 0°)...")
-    viz.display_hand(fk, {})
-    
-    # 7. 逐关节动画
-    if design.joints:
-        print(f"\nThere are {len(design.joints)} joints to animate.")
-        for joint in design.joints:
-            fl = design.fold_lines[joint.fold_line_id]
-            input(f"\nPress Enter to fold joint {joint.id} "
-                  f"(faces {joint.face_a_id}-{joint.face_b_id}, "
-                  f"{fl.fold_type.value}) from 0° to 60°...")
-            
-            viz.animate_folding(fk, joint.id, 0.0, np.pi/3, steps=30)
-    else:
-        print("\nNo joints found! Check the design.")
-    
-    input("\nPress Enter to exit...")
-    print("Done!")
+    # 6. 可视化 (MeshCat-based OrigamiVisualizer removed; use MuJoCo for 3D visualization instead)
+    #    To visualize in MuJoCo, export URDF and use src.interactive.mujoco_simulator.
+    print("\n  [Visualization: MeshCat removed] Use MuJoCo simulator for 3D visualization.")
+    print("  Done!")
 
 
 if __name__ == "__main__":

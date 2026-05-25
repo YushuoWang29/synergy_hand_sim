@@ -414,6 +414,11 @@ class OrigamiHandDesign:
         """
         根据已有的 fold_lines 自动识别面片并生成关节连接。
         完成后设置 root_face_id, face_parent, 并填充 faces 和 joints 列表。
+
+        注意：此方法会清空并重建 self.fold_lines，所有折痕线 ID 会重新分配。
+        因此孔 (Hole) 和滑轮 (Pulley) 中记录的 attached_fold_line_id 将指向
+        无效的旧 ID。本方法在重建完成后会自动按几何位置重新将孔和滑轮挂载到
+        最近的谷折/峰折折痕线上。
         """
         from .origami_parser import (
             split_at_intersections,
@@ -437,6 +442,10 @@ class OrigamiHandDesign:
         faces = find_minimal_cycles(nodes, edges)
         faces = remove_outer_face(faces, nodes)
 
+        # 先保存孔和滑轮的原始附着折痕信息（用于后续修复）
+        hole_refs = list(self.holes.items())
+        pulley_refs = list(self.pulleys.items())
+
         # 重建 fold_lines: 添加图中新生成的边（已被分割后的子线段）
         self.fold_lines.clear()
         for edge in edges:
@@ -453,6 +462,64 @@ class OrigamiHandDesign:
 
         if self.root_face_id is not None:
             self.build_face_tree()
+
+        # =============== 修复孔 (Hole) 的 attached_fold_line_id ===============
+        # build_topology() 重建了 fold_lines 并重新分配了 ID，原来孔中的
+        # attached_fold_line_id 指向的是重建前的旧折痕线 ID，在新拓扑中无效。
+        # 
+        # 修复策略：对每个孔，找到几何位置最近的谷折/峰折折痕线，
+        # 将其 attached_fold_line_id 更新为对应新折痕的 ID。
+        repaired_holes = 0
+        for hid, hole in self.holes.items():
+            old_id = hole.attached_fold_line_id
+            if old_id is None:
+                continue
+            px, py = hole.position.x, hole.position.y
+            best_id = None
+            best_dist_sq = float('inf')
+            for fl_id, fl in self.fold_lines.items():
+                if not fl.is_fold:
+                    continue
+                # 折痕中点到孔位置的距离（孔位于折痕线上或其附近）
+                mx = (fl.start.x + fl.end.x) / 2.0
+                my = (fl.start.y + fl.end.y) / 2.0
+                d2 = (px - mx)**2 + (py - my)**2
+                if d2 < best_dist_sq:
+                    best_dist_sq = d2
+                    best_id = fl_id
+            best_dist = np.sqrt(best_dist_sq)
+            if best_id is not None and best_dist < 30.0:
+                hole.attached_fold_line_id = best_id
+                if old_id != best_id:
+                    repaired_holes += 1
+        if repaired_holes > 0:
+            print(f"  [build_topology] 修复了 {repaired_holes} 个孔的折痕关联")
+
+        # =============== 修复滑轮 (Pulley) 的 attached_fold_line_id ===============
+        repaired_pulleys = 0
+        for pid, pulley in self.pulleys.items():
+            old_id = pulley.attached_fold_line_id
+            if old_id is None:
+                continue
+            px, py = pulley.position.x, pulley.position.y
+            best_id = None
+            best_dist_sq = float('inf')
+            for fl_id, fl in self.fold_lines.items():
+                if not fl.is_fold:
+                    continue
+                mx = (fl.start.x + fl.end.x) / 2.0
+                my = (fl.start.y + fl.end.y) / 2.0
+                d2 = (px - mx)**2 + (py - my)**2
+                if d2 < best_dist_sq:
+                    best_dist_sq = d2
+                    best_id = fl_id
+            best_dist = np.sqrt(best_dist_sq)
+            if best_id is not None and best_dist < 30.0:
+                pulley.attached_fold_line_id = best_id
+                if old_id != best_id:
+                    repaired_pulleys += 1
+        if repaired_pulleys > 0:
+            print(f"  [build_topology] 修复了 {repaired_pulleys} 个滑轮的折痕关联")
 
     # ========= 构建面片树 =========
 

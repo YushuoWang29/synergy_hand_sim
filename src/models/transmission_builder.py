@@ -211,6 +211,74 @@ def compute_R_capstan(design: OrigamiHandDesign,
     return result
 
 
+def compute_R_one_sided(design: OrigamiHandDesign,
+                         beta: float = DEFAULT_BETA) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    计算单侧 Capstan 衰减的传动矩阵 R_A 和 R_B。
+
+    物理模型：
+      R_A[j] = Σ r_k · exp(-β · d_Ak)   从 MotorA 出发的 Capstan 衰减
+      R_B[j] = Σ r_k · exp(-β · dBk)    从 MotorB 出发的 Capstan 衰减
+
+    其中 d_Ak / dBk 是元素 k 到 MotorA / MotorB 的路径步数。
+
+    对比原来的 compute_R_capstan：
+      原公式：R[j] = Σ r_k · (exp(-β·d_Ak) + exp(-β·dBk)) / 2 = (R_A + R_B) / 2
+
+    新公式明确分离 R_A 和 R_B，这样在单马达激活时可以用纯 R_A 或纯 R_B，
+    从而得到从激活马达出发单调递减的物理合理驱动方向。
+
+    参数：
+      design : OrigamiHandDesign
+      beta : Capstan 摩擦系数（默认 0.09）
+
+    返回：
+      (R_A, R_B) : 两个 (num_tendons, n_joints) 数组
+    """
+    joints, jid_to_idx = get_joint_list(design)
+    n = len(joints)
+    if n == 0:
+        return np.empty((0, 0)), np.empty((0, 0))
+
+    R_A_list = []
+    R_B_list = []
+    for tendon in design.tendons.values():
+        elements = [eid for eid in tendon.pulley_sequence
+                    if eid >= 0 or is_hole_id(eid)]
+        N = len(elements)
+        if N == 0:
+            R_A_list.append(np.zeros(n))
+            R_B_list.append(np.zeros(n))
+            continue
+
+        row_A = np.zeros(n)
+        row_B = np.zeros(n)
+        for k, eid in enumerate(elements):
+            r = _get_element_radius(eid, design)
+            if r <= 0:
+                continue
+            j_idx = _get_element_joint_idx(eid, design, jid_to_idx)
+            if j_idx is None:
+                continue
+
+            # 从 MotorA (位置 0) 出发的 Capstan 衰减
+            d_A = float(k)
+            w_A = np.exp(-beta * d_A)
+            row_A[j_idx] += r * w_A
+
+            # 从 MotorB (位置 N-1) 出发的 Capstan 衰减
+            d_B = float(N - 1 - k)
+            w_B = np.exp(-beta * d_B)
+            row_B[j_idx] += r * w_B
+
+        R_A_list.append(row_A)
+        R_B_list.append(row_B)
+
+    R_A = np.array(R_A_list) if R_A_list else np.empty((0, n))
+    R_B = np.array(R_B_list) if R_B_list else np.empty((0, n))
+    return R_A, R_B
+
+
 def compute_R(design: OrigamiHandDesign) -> np.ndarray:
     """
     计算基础传动矩阵 R (num_tendons x num_joints) [几何版本，兼容旧代码]。
@@ -394,6 +462,142 @@ def build_synergy_model(design: OrigamiHandDesign):
 
     joint_names = [f"joint_{j.id}" for j in joints]
     return model, dict(zip(joint_names, E_vec))
+
+
+def build_one_sided_synergy_model(design: OrigamiHandDesign, beta: float = DEFAULT_BETA):
+    """
+    构建单侧协同模型，独立处理每个马达。
+
+    ============================================================
+    物理模型（解决问题 2 和 3）
+    ============================================================
+
+    问题 2（ohd_2/ohd_3 单马达负值驱动关节）：
+      M 矩阵线性模型假设腱绳始终张紧，负马达力矩被求解为负段张力。
+      真实物理中，负马达力矩对应松弛（slack），不应产生驱动力。
+
+      解决方案：将负马达值钳位为 0，并从物理上分离两个马达的作用。
+
+    问题 3（ohd_6 单马达正值时 finger5 > finger4）：
+      原 R = (R_A + R_B) / 2 + Rf 在单马达激活时并不单调衰减。
+      Rf 的 Capstan 净权重可能使远端关节累积更多段数。
+
+      解决方案：在单马达激活时直接使用 R_A 或 R_B。
+      R_A[j] = Σ r_k · exp(-β · d_Ak)  从 MotorA 出发单调递减 ✓
+      R_B[j] = Σ r_k · exp(-β · dBk)  从 MotorB 出发单调递减 ✓
+
+    ============================================================
+    算法：
+      - theta_A, theta_B 非负（负表示松弛/不作用）
+      - 仅 MotorA 工作：q = S_A @ theta_A  (S_A 基于 R_A)
+      - 仅 MotorB 工作：q = S_B @ theta_B  (S_B 基于 R_B)
+      - 两马达同时工作：q = S_avg @ sigma   (sigma = (theta_A+theta_B)/2)
+    """
+    from src.synergy.base_adaptive import AdaptiveSynergyModel as BaseModel
+
+    joints, _ = get_joint_list(design)
+    n = len(joints)
+    if n == 0:
+        raise ValueError("设计中没有任何关节。")
+
+    # 计算单侧传动矩阵
+    R_A, R_B = compute_R_one_sided(design, beta=beta)
+    E_vec = np.array([
+        design.fold_lines[j.fold_line_id].stiffness
+        for j in joints
+    ])
+
+    # 识别驱动腱绳（包含 -1 或 -2 驱动器 ID 的腱绳）
+    drive_indices = [i for (i, t) in enumerate(design.tendons.values())
+                     if -1 in t.pulley_sequence or -2 in t.pulley_sequence]
+    if len(drive_indices) == 0:
+        raise ValueError("设计中没有包含驱动器(-1/-2)的驱动腱绳。")
+
+    # 只保留驱动腱绳
+    R_A = R_A[drive_indices]
+    R_B = R_B[drive_indices]
+
+    # 多腱绳平均化为单输入
+    num_tendons = R_A.shape[0]
+    if num_tendons > 1:
+        R_A = R_A.mean(axis=0, keepdims=True)
+        R_B = R_B.mean(axis=0, keepdims=True)
+
+    # 平均 R = (R_A + R_B) / 2（用于双马达同向模式）
+    R_avg = (R_A + R_B) / 2.0
+
+    # 构建各模式的 AdaptiveSynergyModel 以复用伪逆计算
+    # 注意：对于单马达模式，k=1, 只有 1 个 sigma 输入
+    base_A = BaseModel(n, R_A, E_vec)
+    base_B = BaseModel(n, R_B, E_vec)
+    base_avg = BaseModel(n, R_avg, E_vec)
+
+    S_A = base_A.S  # (n, 1)
+    S_B = base_B.S  # (n, 1)
+    S_avg = base_avg.S  # (n, 1)
+    C = base_avg.C  # (n, n) 被动柔顺
+
+    info = {
+        'R_A': R_A, 'R_B': R_B, 'R_avg': R_avg,
+        'S_A': S_A, 'S_B': S_B, 'S_avg': S_avg,
+        'C': C, 'E_vec': E_vec, 'n_joints': n,
+    }
+    print(f"\n  === 单侧协同模型 ===")
+    print(f"  R_A:  {R_A.flatten()}")
+    print(f"  R_B:  {R_B.flatten()}")
+    print(f"  R_avg: {R_avg.flatten()}")
+    print(f"  S_A:  {S_A.flatten()}")
+    print(f"  S_B:  {S_B.flatten()}")
+    print(f"  S_avg: {S_avg.flatten()}")
+    print(f"  Slack 约束：负电机值钳位为 0")
+
+    return info
+
+
+def solve_one_sided(theta_A: float, theta_B: float, model_info: dict,
+                     J: Optional[np.ndarray] = None,
+                     f_ext: Optional[np.ndarray] = None) -> np.ndarray:
+    """
+    使用单侧协同模型求解关节角。
+
+    参数：
+      theta_A : Motor A 角度（非负，负值视为 0=松弛）
+      theta_B : Motor B 角度（非负，负值视为 0=松弛）
+      model_info : build_one_sided_synergy_model() 返回的字典
+      J : 抓取雅可比 (m x n)
+      f_ext : 外力旋量 (m,)
+
+    返回：
+      q : (n,) 关节角向量
+    """
+    # 负值钳位为 0（腱绳不能受推）
+    theta_A = max(0.0, float(theta_A))
+    theta_B = max(0.0, float(theta_B))
+
+    # 判断哪个马达激活
+    both_active = (theta_A > 1e-10 and theta_B > 1e-10)
+    only_A = (theta_A > 1e-10 and theta_B <= 1e-10)
+    only_B = (theta_B > 1e-10 and theta_A <= 1e-10)
+
+    if both_active:
+        # 双马达同向：使用平均 R
+        sigma = (theta_A + theta_B) / 2.0
+        q = (model_info['S_avg'] @ np.array([sigma])).flatten()
+    elif only_A:
+        # 仅 Motor A 激活：使用 R_A（从 MotorA 出发单调衰减）
+        q = (model_info['S_A'] @ np.array([theta_A])).flatten()
+    elif only_B:
+        # 仅 Motor B 激活：使用 R_B（从 MotorB 出发单调衰减）
+        q = (model_info['S_B'] @ np.array([theta_B])).flatten()
+    else:
+        # 双马达都松弛：无运动
+        q = np.zeros(model_info['n_joints'])
+
+    # 外载荷引起的被动柔顺偏移
+    if J is not None and f_ext is not None:
+        q += model_info['C'] @ J.T @ f_ext
+
+    return q
 
 
 def compute_damper_T(design: OrigamiHandDesign) -> np.ndarray:
