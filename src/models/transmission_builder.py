@@ -464,43 +464,35 @@ def build_synergy_model(design: OrigamiHandDesign):
     return model, dict(zip(joint_names, E_vec))
 
 
-def build_one_sided_synergy_model(design: OrigamiHandDesign, beta: float = DEFAULT_BETA):
+def build_sdas_model(design: OrigamiHandDesign, beta: float = DEFAULT_BETA):
     """
-    构建单侧协同模型，独立处理每个马达。
+    构建 SDAS 模型（状态依赖自适应协同）。
 
-    ============================================================
-    物理模型（解决问题 2 和 3）
-    ============================================================
+    基于 docs/SDAS.md 第 2.3 节的理论推导：
+    - 计算 R_A（从 Motor A 出发的 Capstan 衰减加权传动向量）
+    - 计算 R_B（从 Motor B 出发的 Capstan 衰减加权传动向量）
+    - 构建 SDASModel：q = S_A · θ_A + S_B · θ_B
 
-    问题 2（ohd_2/ohd_3 单马达负值驱动关节）：
-      M 矩阵线性模型假设腱绳始终张紧，负马达力矩被求解为负段张力。
-      真实物理中，负马达力矩对应松弛（slack），不应产生驱动力。
+    SDAS 模型取消了旧的 Rf / 静摩擦冻结概念。
+    始终使用 Schur 补公式（双约束同时生效），
+    因为只要总绳长缩短 σ_c > 0，两端都绷紧。
+    不存在"单端松弛"的情形。
 
-      解决方案：将负马达值钳位为 0，并从物理上分离两个马达的作用。
+    参数：
+        design : OrigamiHandDesign
+        beta : Capstan 摩擦系数（默认 0.09）
 
-    问题 3（ohd_6 单马达正值时 finger5 > finger4）：
-      原 R = (R_A + R_B) / 2 + Rf 在单马达激活时并不单调衰减。
-      Rf 的 Capstan 净权重可能使远端关节累积更多段数。
-
-      解决方案：在单马达激活时直接使用 R_A 或 R_B。
-      R_A[j] = Σ r_k · exp(-β · d_Ak)  从 MotorA 出发单调递减 ✓
-      R_B[j] = Σ r_k · exp(-β · dBk)  从 MotorB 出发单调递减 ✓
-
-    ============================================================
-    算法：
-      - theta_A, theta_B 非负（负表示松弛/不作用）
-      - 仅 MotorA 工作：q = S_A @ theta_A  (S_A 基于 R_A)
-      - 仅 MotorB 工作：q = S_B @ theta_B  (S_B 基于 R_B)
-      - 两马达同时工作：q = S_avg @ sigma   (sigma = (theta_A+theta_B)/2)
+    返回：
+        SDASModel 实例
     """
-    from src.synergy.base_adaptive import AdaptiveSynergyModel as BaseModel
+    from src.synergy.sdas_model import SDASModel
 
     joints, _ = get_joint_list(design)
     n = len(joints)
     if n == 0:
         raise ValueError("设计中没有任何关节。")
 
-    # 计算单侧传动矩阵
+    # 计算单侧传动矩阵（Capstan 衰减加权，公式 2.30）
     R_A, R_B = compute_R_one_sided(design, beta=beta)
     E_vec = np.array([
         design.fold_lines[j.fold_line_id].stiffness
@@ -523,34 +515,38 @@ def build_one_sided_synergy_model(design: OrigamiHandDesign, beta: float = DEFAU
         R_A = R_A.mean(axis=0, keepdims=True)
         R_B = R_B.mean(axis=0, keepdims=True)
 
-    # 平均 R = (R_A + R_B) / 2（用于双马达同向模式）
-    R_avg = (R_A + R_B) / 2.0
+    model = SDASModel(n, R_A, R_B, E_vec)
 
-    # 构建各模式的 AdaptiveSynergyModel 以复用伪逆计算
-    # 注意：对于单马达模式，k=1, 只有 1 个 sigma 输入
-    base_A = BaseModel(n, R_A, E_vec)
-    base_B = BaseModel(n, R_B, E_vec)
-    base_avg = BaseModel(n, R_avg, E_vec)
-
-    S_A = base_A.S  # (n, 1)
-    S_B = base_B.S  # (n, 1)
-    S_avg = base_avg.S  # (n, 1)
-    C = base_avg.C  # (n, n) 被动柔顺
-
-    info = {
-        'R_A': R_A, 'R_B': R_B, 'R_avg': R_avg,
-        'S_A': S_A, 'S_B': S_B, 'S_avg': S_avg,
-        'C': C, 'E_vec': E_vec, 'n_joints': n,
-    }
-    print(f"\n  === 单侧协同模型 ===")
+    S_sigma, S_diff = model.get_synergy_directions()
+    print(f"\n  === SDAS 模型（状态依赖自适应协同）===")
     print(f"  R_A:  {R_A.flatten()}")
     print(f"  R_B:  {R_B.flatten()}")
-    print(f"  R_avg: {R_avg.flatten()}")
-    print(f"  S_A:  {S_A.flatten()}")
-    print(f"  S_B:  {S_B.flatten()}")
-    print(f"  S_avg: {S_avg.flatten()}")
-    print(f"  Slack 约束：负电机值钳位为 0")
+    print(f"  S_A_schur:  {model.S_A_schur.flatten()}")
+    print(f"  S_B_schur:  {model.S_B_schur.flatten()}")
+    print(f"  S_sigma_schur (σ_c 方向): {S_sigma}")
+    print(f"  S_diff_schur (σ_d 方向): {S_diff}")
+    print(f"  约束：总绳长缩短 σ_c>0 则两端绷紧，始终用 Schur 补公式")
 
+    return model
+
+
+def build_one_sided_synergy_model(design: OrigamiHandDesign, beta: float = DEFAULT_BETA):
+    """
+    [已废弃] 请使用 build_sdas_model() 替代。
+
+    保留用于向后兼容。内部委托给 build_sdas_model() 并将结果
+    转换为旧的 info 字典格式。
+    """
+    model = build_sdas_model(design, beta=beta)
+    R_avg = (model.R_A + model.R_B) / 2.0
+    info = {
+        'R_A': model.R_A, 'R_B': model.R_B, 'R_avg': R_avg,
+        'S_A': model.S_A_schur, 'S_B': model.S_B_schur,
+        'S_avg': model.S_sigma_schur / 2.0,
+        'C': model.E_inv - model.S_A_schur @ model.R_A @ model.E_inv - model.S_B_schur @ model.R_B @ model.E_inv,
+        'E_vec': model.E_vec, 'n_joints': model.n_joints,
+        '_sdas_model': model,
+    }
     return info
 
 
@@ -558,42 +554,33 @@ def solve_one_sided(theta_A: float, theta_B: float, model_info: dict,
                      J: Optional[np.ndarray] = None,
                      f_ext: Optional[np.ndarray] = None) -> np.ndarray:
     """
-    使用单侧协同模型求解关节角。
+    [已废弃] 请直接使用 SDASModel.solve_motors() 替代。
 
-    参数：
-      theta_A : Motor A 角度（非负，负值视为 0=松弛）
-      theta_B : Motor B 角度（非负，负值视为 0=松弛）
-      model_info : build_one_sided_synergy_model() 返回的字典
-      J : 抓取雅可比 (m x n)
-      f_ext : 外力旋量 (m,)
-
-    返回：
-      q : (n,) 关节角向量
+    保留用于向后兼容。如果 model_info 包含 SDAS 模型则委托给 SDAS，
+    否则使用旧的逻辑。
     """
-    # 负值钳位为 0（腱绳不能受推）
+    sdas_model = model_info.get('_sdas_model')
+    if sdas_model is not None:
+        return sdas_model.solve_motors(theta_A, theta_B, J, f_ext)
+
+    # 旧逻辑（向后兼容）
     theta_A = max(0.0, float(theta_A))
     theta_B = max(0.0, float(theta_B))
 
-    # 判断哪个马达激活
     both_active = (theta_A > 1e-10 and theta_B > 1e-10)
     only_A = (theta_A > 1e-10 and theta_B <= 1e-10)
     only_B = (theta_B > 1e-10 and theta_A <= 1e-10)
 
     if both_active:
-        # 双马达同向：使用平均 R
         sigma = (theta_A + theta_B) / 2.0
         q = (model_info['S_avg'] @ np.array([sigma])).flatten()
     elif only_A:
-        # 仅 Motor A 激活：使用 R_A（从 MotorA 出发单调衰减）
         q = (model_info['S_A'] @ np.array([theta_A])).flatten()
     elif only_B:
-        # 仅 Motor B 激活：使用 R_B（从 MotorB 出发单调衰减）
         q = (model_info['S_B'] @ np.array([theta_B])).flatten()
     else:
-        # 双马达都松弛：无运动
         q = np.zeros(model_info['n_joints'])
 
-    # 外载荷引起的被动柔顺偏移
     if J is not None and f_ext is not None:
         q += model_info['C'] @ J.T @ f_ext
 

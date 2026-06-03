@@ -12,6 +12,8 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Dict, Any
 import time
+from copy import deepcopy
+
 
 
 @dataclass
@@ -61,18 +63,21 @@ class DynamicsODE:
 
     def __init__(self, assembler, compute_inputs_fn: Callable,
                  compute_gravity_fn: Callable = None,
-                 z_update_fn: Callable = None):
+                 z_update_fn: Callable = None,
+                 n_z: int = 0):
         self.assembler = assembler
         self.compute_inputs_fn = compute_inputs_fn
         self.compute_gravity_fn = compute_gravity_fn
         self.z_update_fn = z_update_fn
+        self.n_z = n_z  # static friction state dimension
 
     def __call__(self, t: float, x: np.ndarray) -> np.ndarray:
         n_joints = self.assembler.n_joints
-        state = ODEState.from_vector(x, n_joints)
+        state = ODEState.from_vector(x, n_joints, n_z=self.n_z)
         state.t = t
 
         q, q_dot = state.q, state.q_dot
+
 
         # Compute control inputs
         u = self.compute_inputs_fn(t, q, q_dot)
@@ -123,6 +128,9 @@ class Integrator:
         self.verbose = verbose
         self._timeout = 300.0  # max wall-clock seconds
         self._start_time = None
+        self.post_step_callback = None  # Callable(t, x)
+        self._internal_copy = True  # always copy x before passing to callback
+
 
     def integrate(self, rhs: Callable, t_span: tuple,
                   x0: np.ndarray, dt_fixed: float = None,
@@ -176,11 +184,18 @@ class Integrator:
 
             t += dt
 
+            # ============================================================
+            # 调用后步回调（用于更新静摩擦状态 z、记录等）
+            # ============================================================
+            if self.post_step_callback is not None:
+                self.post_step_callback(t, x)
+
             if t > t1 - 0.5 * dt:
                 break
 
             ts.append(t)
             xs.append(x.copy())
+
 
         return ts, xs
 

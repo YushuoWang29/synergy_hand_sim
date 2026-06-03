@@ -4,8 +4,8 @@
 
 右侧面板显示五个滑块（动态模式）：
   Motor A, Motor B  —— 独立电机控制
-  σ (同动量)  —— (A+B)/2
-  σ_f (差动量) —— (A-B)/2
+  σ_c (同动量)  —— (A+B)/2
+  σ_d (差动量) —— (A-B)/2
   Speed (rad/s) —— 电机转速设定（0~10 rad/s）
 
 动态协同模式 (--dynamic):
@@ -13,11 +13,11 @@
   - Speed ≈ 0 rad/s  → 手指按 S_s 方向运动（慢速/准静态，如捏取）
   - Speed ≥ 10 rad/s → 手指按 S_f 方向运动（快速/动态，如握拳）
   - 中间值 → 平滑插值
-  σ 和 σ_f 均受动态影响。
+  σ_c 和 σ_d 均受动态影响。
 
 【变更记录 v3】：
   1. 新增 Speed (rad/s) 滑块替代帧差追踪速度
-  2. sigma_f 默认受动态影响（移除 --dynamic-on-f 参数）
+  2. sigma_d 默认受动态影响（移除 --dynamic-on-f 参数）
   3. 精简动态模式终端输出信息
 """
 
@@ -172,20 +172,30 @@ def main():
         print(f"  Speed 滑块范围: 0 ~ 10 rad/s (滑块值为 0~10 对应 speed_factor=0~1)")
 
         def synergy_callback(theta1_rad, theta2_rad, speed_rad_s=0.0):
+            # ---- 总绳长检查（修复 sigma_c 符号丢失问题）----
+            # 直接检查原始 theta1+theta2（即 2*sigma_c）：
+            #   ≤ 0 → 绳子不缩短 → 松弛，无主动运动
+            #   注意：不能在 clamp 之后再算 sigma_c，因为 clamp 丢失了
+            #   负值的 sigma_c 信息（例如 sigma_c=-0.3, sigma_d=0.5
+            #   经过 clamp+重构后 sigma_c 变成正数）
+            total = float(theta1_rad) + float(theta2_rad)
+            if total <= 1e-10:
+                return {urdf_name: 0.0 for urdf_name in urdf_to_syn_map}
+
             # Slack 钳位：负值 → 0（腱绳不能受推）
             theta_A = max(0.0, float(theta1_rad))
             theta_B = max(0.0, float(theta2_rad))
             
-            sigma = (theta_A + theta_B) / 2.0
-            sigma_f = (theta_A - theta_B) / 2.0
+            sigma_c = (theta_A + theta_B) / 2.0
+            sigma_d = (theta_A - theta_B) / 2.0
 
             # Speed 滑块值直接映射为 speed_factor (0~10 rad/s → 0~1)
             speed_factor = np.clip(speed_rad_s / 10.0, 0.0, 1.0)
 
-            # sigma 和 sigma_f 都受动态影响
+            # sigma_c 和 sigma_d 都受动态影响
             q = model.solve_combined(
-                np.array([sigma]),
-                np.array([sigma_f]),
+                np.array([sigma_c]),
+                np.array([sigma_d]),
                 speed_factor=speed_factor,
                 use_dynamic_on_f=True  # 默认启用
             )
@@ -233,6 +243,11 @@ def main():
         print(f"  → 双马达同向时使用增强协同模型")
 
         def synergy_callback(theta1_rad, theta2_rad, speed_rad_s=0.0):
+            # ---- 总绳长检查（修复 sigma_c 符号丢失问题）----
+            total = float(theta1_rad) + float(theta2_rad)
+            if total <= 1e-10:
+                return {urdf_name: 0.0 for urdf_name in urdf_to_syn_map}
+
             # Slack 钳位：负值 → 0（腱绳不能受推）
             theta_A = max(0.0, float(theta1_rad))
             theta_B = max(0.0, float(theta2_rad))

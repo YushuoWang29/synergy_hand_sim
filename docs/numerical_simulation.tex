@@ -1,0 +1,108 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newcommand{\R}{\mathbb{R}}
+
+\title{折纸手力学数值求解方法}
+\author{论文附录}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{力学模型概述}
+
+本项目的数值动力学仿真基于关节空间的多体动力学方程建立。对于具有 $n$ 个旋转关节的折纸手系统，运动方程为：
+\begin{equation}\label{eq:eom}
+\mathbf{M}(\mathbf{q})\ddot{\mathbf{q}} + \mathbf{C}(\mathbf{q},\dot{\mathbf{q}})\dot{\mathbf{q}} + \boldsymbol{\tau}_g(\mathbf{q}) + \boldsymbol{\tau}_f(\mathbf{q},\dot{\mathbf{q}}) + \mathbf{K}\mathbf{q} = \boldsymbol{\tau}_t(\mathbf{q},\mathbf{u}),
+\end{equation}
+其中 $\mathbf{q}\in\R^n$ 为关节角向量，$\mathbf{M}(\mathbf{q})$ 为惯性矩阵，$\mathbf{C}$ 为科里奥利矩阵（对平面折纸手近似为零），$\boldsymbol{\tau}_g$ 为重力矩，$\boldsymbol{\tau}_f$ 为关节摩擦力矩（含粘滞和库仑两项），$\mathbf{K}$ 为关节刚度对角阵。右侧 $\boldsymbol{\tau}_t$ 为腱绳传动产生的驱动力矩，其形式为：
+\begin{equation}\label{eq:trans}
+\boldsymbol{\tau}_t(\mathbf{q},\mathbf{u}) = \mathbf{Q}(\mathbf{q})\,\mathbf{u},
+\end{equation}
+其中 $\mathbf{Q}(\mathbf{q})\in\R^{n\times 3}$ 为传动矩阵，$\mathbf{u}\in\R^3$ 为控制输入向量 $\mathbf{u} = [\tau_M\sigma,\;\sigma,\;\sigma_f]^\top$，$\sigma$ 和 $\sigma_f$ 分别对应协同和差动激活量，$\tau_M$ 为电机拉力幅度。
+
+\section{三层递进仿真架构}
+
+仿真求解器 \texttt{HandSimulator} 实现了从简到繁的三层递进数值策略。
+
+\subsection{Phase 1：准静态力平衡}
+
+准静态求解器忽略惯性和阻尼效应，直接求解力平衡方程：
+\begin{equation}\label{eq:qs}
+\mathbf{K}\mathbf{q} = \mathbf{Q}\,\mathbf{u} - \boldsymbol{\tau}_g(\mathbf{q}),
+\end{equation}
+采用牛顿迭代法（Broyden 或拟牛顿）求解上述非线性方程组，收敛容差默认 $10^{-8}$。该阶段适用于快速验证腱绳传动拓扑正确性和平衡关节构型。
+
+\subsection{Phase 2：完整动力学积分}
+
+在准静态验证通过后，Phase 2 对完整运动方程\eqref{eq:eom} 进行数值积分。加速度由下式计算：
+\begin{equation}\label{eq:accel}
+\ddot{\mathbf{q}} = \mathbf{M}^{-1}\bigl(\mathbf{Q}\mathbf{u} - \mathbf{B}\dot{\mathbf{q}} - \boldsymbol{\tau}_{\text{Coulomb}} - \mathbf{K}\mathbf{q}\bigr),
+\end{equation}
+其中 $\mathbf{B}=\text{diag}(b_1,\dots,b_n)$ 为粘滞阻尼系数对角阵，$\boldsymbol{\tau}_{\text{Coulomb}}$ 为库仑摩擦力。状态向量 $\mathbf{x}=[\mathbf{q}^\top,\dot{\mathbf{q}}^\top]^\top\in\R^{2n}$。状态导数由 \texttt{DynamicsODE} 类构建：
+\begin{equation}\label{eq:rhs}
+\dot{\mathbf{x}} = \begin{bmatrix}
+\dot{\mathbf{q}} \\
+\ddot{\mathbf{q}}
+\end{bmatrix}.
+\end{equation}
+
+\subsection{集成的数值积分器}
+
+\texttt{Integrator} 类支持三种积分方法：
+\begin{itemize}
+    \item \textbf{RK4（经典四阶龙格-库塔）}：固定步长默认 $10^{-4}\,\text{s}$，兼顾稳定性和精度。
+    \item \textbf{前向欧拉}：一阶显式，用于快速原型验证。
+    \item \textbf{scipy RK45}：自适应步长包装器，容差 $10^{-6}/10^{-8}$，适用于需要高精度结果的场景。
+\end{itemize}
+积分器内建超时机制（默认 300 秒），防止长时间仿真挂起。
+
+\section{传动矩阵的计算}
+
+\texttt{compute\_Q\_matrix} 函数从折纸手设计中提取传动拓扑，构造 $\mathbf{Q}$ 矩阵的三列：
+\begin{align*}
+\mathbf{Q}_{:,0} &= \mathbf{R}_{\text{sum}} = \mathbf{R}_A + \mathbf{R}_B, \\
+\mathbf{Q}_{:,1} &= \mathbf{R}_{\text{sum}}, \\
+\mathbf{Q}_{:,2} &= \mathbf{R}_A - \mathbf{R}_B,
+\end{align*}
+其中 $\mathbf{R}_A,\mathbf{R}_B\in\R^n$ 分别为两台电机到各关节的 Capstan 衰减传动向量（由第 2 章公式定义）。如此构造的 $\mathbf{Q}$ 矩阵使控制输入 $[\tau_M\sigma,\sigma,\sigma_f]^\top$ 与关节力矩直接关联。
+
+\section{惯性矩阵与关节刚度}
+
+\texttt{DynamicsAssembler} 在构造时自动从设计数据计算惯性矩阵和关节刚度：
+\begin{itemize}
+    \item \textbf{惯性矩阵}：$M_{jj} = \sum_{i\in\text{downstream}(j)} m_i d_i^2$，其中 $d_i$ 为面片 $i$ 的质心到关节 $j$ 折痕线的垂直距离，$m_i$ 为面片质量（由材料厚度和面片面积计算）。
+    \item \textbf{关节刚度}：从 \texttt{.ohd} 文件中 \texttt{FoldLine.stiffness} 属性读取，每根折痕对应一个弹性系数 $k_j$。
+    \item \textbf{阻尼系数}：关节粘滞阻尼默认为 $0.01\;\text{Nms/rad}$，库仑摩擦默认为零，均可由配置文件调整。
+\end{itemize}
+
+\section{多段连续仿真与控制输入}
+
+仿真入口脚本 \texttt{run\_numerical\_simulation.py} 支持多段分段常数控制输入模式。用户通过 \texttt{--sigma} 和 \texttt{--sigma-f} 参数指定各段的 $\sigma$ 和 $\sigma_f$ 值，用 \texttt{--t-per} 指定每段时长。系统自动将分段常数函数封装为字符串表达式，在积分循环中被 \texttt{eval} 运行时求值。这种设计允许在不修改仿真核心代码的前提下灵活定义任意控制序列。
+
+\section{完整算例}
+
+以 \texttt{ohd\_2} 设计的三步分段仿真为例：
+\begin{itemize}
+    \item 第一段（$0\sim0.3$\,s）：$\sigma=5,\ \sigma_f=0$（协同捏取）
+    \item 第二段（$0.3\sim0.6$\,s）：$\sigma=5,\ \sigma_f=-2$（反向差动偏转）
+    \item 第三段（$0.6\sim0.9$\,s）：$\sigma=5,\ \sigma_f=+2$（正向差动偏转）
+\end{itemize}
+通过 \texttt{run\_three\_phase\_demo.py} 可一键执行该三段仿真并输出 $n$ 个关节角的完整时间历程，验证差动控制对不同手指的独立偏转效果。
+
+\section{扩展性}
+
+仿真框架具有良好的模块化结构。如需集成 SDAS 协同模型替代传统 $\mathbf{Q}$ 矩阵传动，只需将 \texttt{DynamicsAssembler.compute\_acceleration} 中的 $\mathbf{Q}\mathbf{u}$ 项替换为 \texttt{SDASModel.solve\_motors} 的输出 $\mathbf{q}$ 并通过弹性映射转换为力矩即可，无需改动积分核心。
+
+\end{document}

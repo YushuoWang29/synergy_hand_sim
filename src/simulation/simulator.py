@@ -3,7 +3,7 @@ Top-level simulation engine integrating all components.
 """
 
 import numpy as np
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Callable
 from dataclasses import dataclass, field
 import time
 
@@ -13,6 +13,8 @@ from .dynamics import DynamicsAssembler
 from .integrator import ODEState, DynamicsODE, Integrator
 from .quasi_static import QuasiStaticSolver, QuasiStaticResult
 from .transmission_force import compute_Q_matrix
+from .friction_models import HaywardArmstrongFriction, CapstanTensionDistribution
+
 
 
 @dataclass
@@ -61,15 +63,87 @@ class HandSimulator:
         self.config = config or SimulationConfig()
 
         self.rbs = rigid_body_system or RigidBodySystem.from_design(design)
+
+        # ============================================================
+        # 修复 1: 将 design + rbs 传入 DynamicsAssembler，
+        # 让它可以从设计读取真实的惯性矩阵和关节刚度。
+        # ============================================================
         self.assembler = dynamics_assembler or DynamicsAssembler(
             n_joints=self.rbs.n_joints,
             joint_damping=self.rbs.joint_damping,
             joint_coulomb=self.rbs.joint_coulomb_friction,
+            design=design,
+            rigid_body_system=self.rbs,
         )
+
         self.Q_tauM, self.Q_s, self.Q_sdot = compute_Q_matrix(design)
+
+        # ============================================================
+        # 修复 4: 创建 Hayward-Armstrong 静摩擦模型实例
+        # 统计所有腱绳路径上的 pulley/hole 元素总数
+        # ============================================================
+        self.friction_model = None
+        self._n_z = 0
+        if self.config.use_static_friction:
+            total_elements = 0
+            for tendon in design.tendons.values():
+                for eid in tendon.pulley_sequence:
+                    if (hasattr(design, 'pulleys') and eid in design.pulleys) or \
+                       (hasattr(design, 'holes') and eid in design.holes):
+                        total_elements += 1
+            if total_elements > 0:
+                self._n_z = total_elements
+                self.friction_model = HaywardArmstrongFriction(
+                    n_pulleys=total_elements,
+                    delta_max=np.ones(total_elements) * self.config.delta_max_ratio,
+                    kappa=np.ones(total_elements) * self.config.kappa_ratio,
+                )
+                print(f"  [HandSimulator] Static friction active: "
+                      f"{total_elements} elements, delta_max={self.config.delta_max_ratio}, "
+                      f"kappa={self.config.kappa_ratio}")
+
         self._integrator = Integrator(dt=self.config.dt,
                                        method=self.config.method,
                                        verbose=self.config.verbose)
+
+    def _get_pulley_angles(self, q: np.ndarray) -> np.ndarray:
+        """
+        Map joint angles q to pulley angles theta for friction state update.
+
+        Uses the R_bar matrix structure: each pulley/hole element's angle
+        is its radius * joint angle for the joint it's attached to.
+
+        Returns flatten array of pulley angles matching friction_model ordering.
+        """
+        from src.models.transmission_builder import get_joint_list
+        from src.models.origami_design import is_pulley_id, is_hole_id
+
+        joints, jid_to_idx = get_joint_list(self.design)
+        theta_list = []
+        for tendon in self.design.tendons.values():
+            for eid in tendon.pulley_sequence:
+                if is_pulley_id(eid) and eid in self.design.pulleys:
+                    p = self.design.pulleys[eid]
+                    if p.attached_fold_line_id is not None:
+                        j_idx = jid_to_idx.get(p.attached_fold_line_id)
+                        if j_idx is not None and j_idx < len(q):
+                            theta_list.append(q[j_idx] * p.radius)
+                        else:
+                            theta_list.append(0.0)
+                    else:
+                        theta_list.append(0.0)
+                elif is_hole_id(eid) and eid in self.design.holes:
+                    h = self.design.holes[eid]
+                    if h.attached_fold_line_id is not None:
+                        j_idx = jid_to_idx.get(h.attached_fold_line_id)
+                        if j_idx is not None and j_idx < len(q):
+                            theta_list.append(q[j_idx] * h.plate_offset)
+                        else:
+                            theta_list.append(0.0)
+                    else:
+                        theta_list.append(0.0)
+        return np.array(theta_list)
+
 
     def _compute_inputs(self, t, q, q_dot):
         """Construct 3-component input vector u = [tau_M * sigma, sigma, sigma_f].
@@ -132,11 +206,36 @@ class HandSimulator:
             assembler=self.assembler,
             compute_inputs_fn=inputs_fn,
             compute_gravity_fn=self._compute_gravity,
+            n_z=self._n_z,
         )
         ode.compute_q_matrix = qmat_fn
 
-        state = ODEState(q=q0, q_dot=q_dot0, t=0.0)
+
+        # ============================================================
+        # 修复 4: 将静摩擦状态 z 加入 ODE 状态向量
+        # ============================================================
+        z0 = (
+            np.zeros(self._n_z)
+            if self.friction_model is not None and self._n_z > 0
+            else np.zeros(0)
+        )
+        state = ODEState(q=q0, q_dot=q_dot0, z=z0 if len(z0) > 0 else None, t=0.0)
+
         t_span = (0.0, self.config.t_end)
+
+        # 后步回调：在每个积分步后更新摩擦模型 z 状态
+        if self.friction_model is not None and self._n_z > 0:
+            def post_step_callback(t, x):
+                q_curr = x[:n_joints]
+                theta = self._get_pulley_angles(q_curr)
+                if len(theta) == self._n_z:
+                    self.friction_model.update(theta, self.config.dt)
+                # 回写更新后的 z 到状态向量
+                # 状态向量 = [q (n_joints), q_dot (n_joints), z (n_z)]
+                z_start = 2 * n_joints
+                x[z_start:z_start + self._n_z] = self.friction_model.z
+            self._integrator.post_step_callback = post_step_callback
+
 
         start = time.time()
         ts, xs = self._integrator.integrate(ode, t_span, state.as_vector(),
@@ -149,6 +248,7 @@ class HandSimulator:
 
         q_arr = xs_arr[:, :n_joints]
         qd_arr = xs_arr[:, n_joints:2*n_joints]
+
 
         kinetic = np.zeros(len(ts_arr))
         if qd_arr.shape[1] == self.assembler.inertia_matrix.shape[0]:
@@ -163,3 +263,5 @@ class HandSimulator:
             info=dict(n_steps_total=len(ts), n_joints=n_joints,
                       dt=self.config.dt, method=self.config.method,
                       phase=self.config.phase, elapsed_s=elapsed))
+
+

@@ -18,7 +18,6 @@ from src.models.origami_parser import OrigamiParser
 from src.synergy.base_adaptive import AdaptiveSynergyModel
 from src.interactive.mujoco_simulator import MuJoCoSimulator
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("dxf_file", help="DXF 手模型文件路径")

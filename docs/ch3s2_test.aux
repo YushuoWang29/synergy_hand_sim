@@ -1,0 +1,75 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {subsection}{\numberline {0.3.2}状态依赖自适应协同（SDAS）模型的软件实现与仿真验证}{1}{subsection.0.3.2}\protected@file@percent }
+\newlabel{sec:sdas_implementation}{{0.3.2}{1}{状态依赖自适应协同（SDAS）模型的软件实现与仿真验证}{subsection.0.3.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{软件架构与数据流}{1}{section*.1}\protected@file@percent }
+\newlabel{sec:architecture}{{0.3.2}{1}{软件架构与数据流}{section*.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces SDAS 模型软件架构的五个功能层次与对应模块}}{1}{table.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:module_architecture}{{1}{1}{SDAS 模型软件架构的五个功能层次与对应模块}{table.caption.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces SDAS 模型的软件架构与模块调用关系。实线箭头表示构建阶段的数据依赖，虚线箭头表示运行阶段的控制流。}}{2}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:sdas_architecture}{{1}{2}{SDAS 模型的软件架构与模块调用关系。实线箭头表示构建阶段的数据依赖，虚线箭头表示运行阶段的控制流。}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{核心数据结构：OrigamiHandDesign}{2}{section*.4}\protected@file@percent }
+\newlabel{sec:data_structures}{{0.3.2}{2}{核心数据结构：OrigamiHandDesign}{section*.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces \lstinline {OrigamiHandDesign} 类中与 SDAS 模型密切相关的关键字段}}{3}{table.caption.5}\protected@file@percent }
+\newlabel{tab:design_fields}{{2}{3}{\lstinline {OrigamiHandDesign} 类中与 SDAS 模型密切相关的关键字段}{table.caption.5}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}{\ignorespaces \lstinline {get_joint_list()} 的函数签名与返回值格式}}{3}{lstlisting.0.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Capstan 指数衰减导致的 $\mathbf  {R}_A$ 与 $\mathbf  {R}_B$ 分布（以 ohd\_2 设计为例，$\beta = 0.09$）。横坐标为关节序号，纵坐标为传动比。$\mathbf  {R}_A$ 从近端（关节 0）到远端（关节 9）单调递减，$\mathbf  {R}_B$ 反向单调递减。}}{4}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:RA_RB_dist}{{2}{4}{Capstan 指数衰减导致的 $\mathbf {R}_A$ 与 $\mathbf {R}_B$ 分布（以 ohd\_2 设计为例，$\beta = 0.09$）。横坐标为关节序号，纵坐标为传动比。$\mathbf {R}_A$ 从近端（关节 0）到远端（关节 9）单调递减，$\mathbf {R}_B$ 反向单调递减。}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{单侧传动矩阵 $\mathbf  {R}_A$ 与 $\mathbf  {R}_B$ 的计算}{4}{section*.7}\protected@file@percent }
+\newlabel{sec:RA_RB_computation}{{0.3.2}{4}{单侧传动矩阵 $\mathbf {R}_A$ 与 $\mathbf {R}_B$ 的计算}{section*.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{物理模型与 Capstan 指数衰减}{5}{section*.8}\protected@file@percent }
+\newlabel{eq:capstan}{{1}{5}{物理模型与 Capstan 指数衰减}{equation.0.1}{}}
+\newlabel{eq:alpha_A}{{2}{5}{物理模型与 Capstan 指数衰减}{equation.0.2}{}}
+\newlabel{eq:alpha_B}{{3}{5}{物理模型与 Capstan 指数衰减}{equation.0.3}{}}
+\newlabel{eq:alpha_simple}{{4}{5}{物理模型与 Capstan 指数衰减}{equation.0.4}{}}
+\newlabel{eq:RA_formula}{{5}{5}{物理模型与 Capstan 指数衰减}{equation.0.5}{}}
+\newlabel{eq:RB_formula}{{6}{5}{物理模型与 Capstan 指数衰减}{equation.0.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{代码实现}{6}{section*.9}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}{\ignorespaces \lstinline {compute_R_one_sided()} 函数的核心循环}}{6}{lstlisting.0.2}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces 单侧传动矩阵 $\mathbf  {R}_A$ 与 $\mathbf  {R}_B$ 的计算}}{7}{algorithm.1}\protected@file@percent }
+\newlabel{alg:compute_RA_RB}{{1}{7}{单侧传动矩阵 $\mathbf {R}_A$ 与 $\mathbf {R}_B$ 的计算}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{SDAS 模型类的实现：Schur 补与单向公式}{7}{section*.10}\protected@file@percent }
+\newlabel{sec:sdas_class}{{0.3.2}{7}{SDAS 模型类的实现：Schur 补与单向公式}{section*.10}{}}
+\@writefile{toc}{\contentsline {paragraph}{构造阶段的预计算}{7}{section*.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces \lstinline {SDASModel} 类的核心 API 接口}}{8}{table.caption.11}\protected@file@percent }
+\newlabel{tab:sdas_api}{{3}{8}{\lstinline {SDASModel} 类的核心 API 接口}{table.caption.11}{}}
+\newlabel{eq:paper_A}{{7}{8}{构造阶段的预计算}{equation.0.7}{}}
+\newlabel{eq:paper_B}{{8}{8}{构造阶段的预计算}{equation.0.8}{}}
+\newlabel{eq:schur_coeff}{{9}{8}{构造阶段的预计算}{equation.0.9}{}}
+\newlabel{eq:schur_det}{{10}{8}{构造阶段的预计算}{equation.0.10}{}}
+\newlabel{eq:schur_SA}{{11}{8}{构造阶段的预计算}{equation.0.11}{}}
+\newlabel{eq:schur_SB}{{12}{8}{构造阶段的预计算}{equation.0.12}{}}
+\newlabel{eq:C_matrix}{{13}{8}{构造阶段的预计算}{equation.0.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{两个核心求解方法}{9}{section*.13}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \lstinline {solve\_motors()} 的约束选择逻辑}}{9}{algorithm.2}\protected@file@percent }
+\newlabel{alg:solve_motors}{{2}{9}{\lstinline {solve\_motors()} 的约束选择逻辑}{algorithm.2}{}}
+\newlabel{eq:sigma_to_theta}{{14}{9}{两个核心求解方法}{equation.0.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces SDAS 求解器的完整工作流程，包含输入转换、松弛钳位、约束选择（Schur 补/单向公式分支）和限位输出等步骤。}}{10}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:sdas_flowchart}{{3}{10}{SDAS 求解器的完整工作流程，包含输入转换、松弛钳位、约束选择（Schur 补/单向公式分支）和限位输出等步骤。}{figure.caption.14}{}}
+\@writefile{toc}{\contentsline {subsubsection}{MuJoCo 交互仿真器集成与滑块回调}{10}{section*.15}\protected@file@percent }
+\newlabel{sec:mujoco_integration}{{0.3.2}{10}{MuJoCo 交互仿真器集成与滑块回调}{section*.15}{}}
+\@writefile{toc}{\contentsline {paragraph}{构建阶段}{10}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{运行时回调机制}{10}{section*.17}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}{\ignorespaces 仿真器协同回调函数的核心逻辑}}{11}{lstlisting.0.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{仿真验证与结果分析}{11}{section*.19}\protected@file@percent }
+\newlabel{sec:simulation_validation}{{0.3.2}{11}{仿真验证与结果分析}{section*.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces MuJoCo 交互仿真器界面。主窗口以三维方式渲染折纸手模型，右侧面板提供四个交互滑块用于控制 SDAS 模型的输入。滑块之间具有自动联动功能，用户在 $\theta _A/\theta _B$ 和 $\sigma /\sigma _f$ 两组控制模式下均可实现自然交互。}}{12}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:mujoco_gui}{{4}{12}{MuJoCo 交互仿真器界面。主窗口以三维方式渲染折纸手模型，右侧面板提供四个交互滑块用于控制 SDAS 模型的输入。滑块之间具有自动联动功能，用户在 $\theta _A/\theta _B$ 和 $\sigma /\sigma _f$ 两组控制模式下均可实现自然交互。}{figure.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces 仿真验证实验的基本参数配置}}{12}{table.caption.20}\protected@file@percent }
+\newlabel{tab:validation_params}{{4}{12}{仿真验证实验的基本参数配置}{table.caption.20}{}}
+\@writefile{toc}{\contentsline {paragraph}{实验一：单向模式与双马达模式的对比}{13}{section*.21}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces 单/双马达驱动下各关节角度对比。蓝色为仅 Motor A（$\theta _A=3$\,rad），橙色为仅 Motor B（$\theta _B=3$\,rad），绿色为双马达同向驱动（$\theta _A=\theta _B=3$\,rad），红色虚线为两个单向结果的简单算术平均。双驱动结果介于两者之间且不与简单平均重合，体现了 Schur 补公式产生的交叉耦合效应。}}{13}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:single_vs_dual}{{5}{13}{单/双马达驱动下各关节角度对比。蓝色为仅 Motor A（$\theta _A=3$\,rad），橙色为仅 Motor B（$\theta _B=3$\,rad），绿色为双马达同向驱动（$\theta _A=\theta _B=3$\,rad），红色虚线为两个单向结果的简单算术平均。双驱动结果介于两者之间且不与简单平均重合，体现了 Schur 补公式产生的交叉耦合效应。}{figure.caption.22}{}}
+\@writefile{toc}{\contentsline {paragraph}{实验二：SDAS 模型与 Augmented Adaptive Synergy 模型的对比}{13}{section*.24}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces 相同输入下 SDAS 模型与 Augmented Adaptive Synergy 模型的关节角度对比。$\sigma = 5$\,rad，$\sigma _f = 2$\,rad。SDAS 模型通过 $\mathbf  {R}_A/\mathbf  {R}_B$ 的自然非对称性直接产生不对称的关节角分布，完全无需 $\mathbf  {R}_f$ 矩阵及其可调参数。}}{14}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:sdas_vs_augmented}{{6}{14}{相同输入下 SDAS 模型与 Augmented Adaptive Synergy 模型的关节角度对比。$\sigma = 5$\,rad，$\sigma _f = 2$\,rad。SDAS 模型通过 $\mathbf {R}_A/\mathbf {R}_B$ 的自然非对称性直接产生不对称的关节角分布，完全无需 $\mathbf {R}_f$ 矩阵及其可调参数。}{figure.caption.23}{}}
+\@writefile{toc}{\contentsline {paragraph}{实验三：动力学数值仿真验证}{14}{section*.25}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces 三段 $\sigma _f$ 输入下两个代表性关节（关节 0 和关节 7）的角度时间历程。$\sigma _f$ 在 $t=0.3$\,s 和 $t=0.6$\,s 处发生阶跃切换，关节角度曲线连续光滑过渡，无振荡或跳变。蓝色实线对应 Joint 0（靠近 Motor A），橙色实线对应 Joint 7（靠近 Motor B）。}}{15}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:three_phase}{{7}{15}{三段 $\sigma _f$ 输入下两个代表性关节（关节 0 和关节 7）的角度时间历程。$\sigma _f$ 在 $t=0.3$\,s 和 $t=0.6$\,s 处发生阶跃切换，关节角度曲线连续光滑过渡，无振荡或跳变。蓝色实线对应 Joint 0（靠近 Motor A），橙色实线对应 Joint 7（靠近 Motor B）。}{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {paragraph}{验证结论总结}{16}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{本节小结}{16}{section*.28}\protected@file@percent }
+\newlabel{sec:summary}{{0.3.2}{16}{本节小结}{section*.28}{}}
+\gdef \@abspage@last{16}

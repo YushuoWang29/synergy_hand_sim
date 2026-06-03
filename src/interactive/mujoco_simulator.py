@@ -2,8 +2,8 @@
 """
 基于 MuJoCo 的交互式 URDF 仿真器
 
-增强功能：四滑块协同模式（Motor A, B, σ, σ_f）
-互联动：拖动 A/B 自动更新 σ/σ_f，拖动 σ/σ_f 自动更新 A/B
+增强功能：四滑块协同模式（Motor A, B, σ_c, σ_d）
+互联动：拖动 A/B 自动更新 σ_c/σ_d，拖动 σ_c/σ_d 自动更新 A/B
 
 MuJoCo 查看器右侧面板有两类滑块：
   - "Joint" 滑块（灰色/只读）：仅显示 data.qpos，不可编辑
@@ -38,7 +38,7 @@ class MuJoCoSimulator:
             synergy_callback: 协同回调函数 (theta1, theta2[, speed]) -> qpos_radians dict
             synergy_motor_names: 电机滑块名称列表
             ctrl_range_deg: 滑块控制范围（度），默认 ±720°
-            synergy_with_sigma_sliders: 是否启用 σ/σ_f 额外滑块
+            synergy_with_sigma_sliders: 是否启用 σ_c/σ_d 额外滑块
             synergy_with_speed_slider: 是否启用 Speed (rad/s) 额外滑块（动态模式用）
         """
         self.urdf_path = os.path.abspath(urdf_path)
@@ -90,7 +90,7 @@ class MuJoCoSimulator:
         将 URDF 转换为 MJCF XML 字符串。
         在 synergy 模式中，使用 dummy body+joint 承载 actuator 滑块，
         kp=0 使其不产生任何力矩。
-        在四滑块模式中，创建 4 个滑块：Motor A, Motor B, σ, σ_f。
+        在四滑块模式中，创建 4 个滑块：Motor A, Motor B, σ_c, σ_d。
         """
         tree = ET.parse(self.urdf_path)
         root = tree.getroot()
@@ -281,8 +281,8 @@ class MuJoCoSimulator:
             cr_slider = f"{-self.ctrl_range_rad:.4f} {self.ctrl_range_rad:.4f}"
 
             if self.synergy_with_sigma_sliders:
-                # 四滑块模式：Motor A, Motor B, σ, σ_f
-                slider_names = ["Motor A", "Motor B", "σ (同动量)", "σ_f (差动量)"]
+                # 四滑块模式：Motor A, Motor B, σ_c, σ_d
+                slider_names = ["Motor A", "Motor B", "σ_c (同动量)", "σ_d (差动量)"]
             else:
                 # 双滑块模式：仅 Motor A, Motor B
                 slider_names = self.synergy_motor_names or ["Motor A", "Motor B"]
@@ -320,7 +320,7 @@ class MuJoCoSimulator:
 
             if self.synergy_with_sigma_sliders:
                 # 四滑块模式
-                slider_names = ["Motor A", "Motor B", "Sigma", "Sigma_f"]
+                slider_names = ["Motor A", "Motor B", "Sigma_c", "Sigma_d"]
             else:
                 slider_names = self.synergy_motor_names or ["Motor A", "Motor B"]
 
@@ -495,8 +495,8 @@ class MuJoCoSimulator:
         协同模式（四滑块）：
           滑块索引：0=Motor A, 1=Motor B, 2=σ, 3=σ_f
           每帧检测哪对滑块变动：
-          - 若 A/B 变动为主 → 计算 σ/σ_f 从动
-          - 若 σ/σ_f 变动为主 → 计算 A/B 从动
+          - 若 A/B 变动为主 → 计算 σ_c/σ_d 从动
+          - 若 σ_c/σ_d 变动为主 → 计算 A/B 从动
           然后调用 synergy_callback(A, B) → 设置 qpos
 
         协同模式（双滑块）：
@@ -544,7 +544,7 @@ class MuJoCoSimulator:
                             ctrl[3] = sigma_f
                             self._last_active_pair = 'AB'
                         elif delta_sig > delta_ab + 1e-8:
-                            # 用户在拖动 σ/σ_f → σ,σ_f 为主，A,B 从动
+                            # 用户在拖动 σ_c/σ_d → σ,σ_f 为主，A,B 从动
                             sigma = ctrl[2]
                             sigma_f = ctrl[3]
                             ctrl[0] = sigma + sigma_f

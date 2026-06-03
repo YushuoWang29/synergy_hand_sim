@@ -1,0 +1,52 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {subsection}{\numberline {0.3.2}状态依赖自适应协同（SDAS）模型的软件实现}{1}{subsection.0.3.2}\protected@file@percent }
+\newlabel{sec:sdas_implementation}{{0.3.2}{1}{状态依赖自适应协同（SDAS）模型的软件实现}{subsection.0.3.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{软件架构与数据流}{1}{section*.1}\protected@file@percent }
+\newlabel{sec:architecture}{{0.3.2}{1}{软件架构与数据流}{section*.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces SDAS 模型软件系统架构与数据流。方框代表功能模块，箭头表示数据流向。左侧纵向排列了从设计层到协同层的四层结构，右侧为仿真层与可视化层。}}{2}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:architecture}{{1}{2}{SDAS 模型软件系统架构与数据流。方框代表功能模块，箭头表示数据流向。左侧纵向排列了从设计层到协同层的四层结构，右侧为仿真层与可视化层。}{figure.caption.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}{\ignorespaces 系统架构图生成脚本}}{2}{lstlisting.0.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{核心数据结构：OrigamiHandDesign}{4}{section*.3}\protected@file@percent }
+\newlabel{sec:data_structures}{{0.3.2}{4}{核心数据结构：OrigamiHandDesign}{section*.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces \texttt  {OrigamiHandDesign} 中与 SDAS 模型密切相关的关键属性}}{5}{table.caption.4}\protected@file@percent }
+\newlabel{tab:design_fields}{{1}{5}{\texttt {OrigamiHandDesign} 中与 SDAS 模型密切相关的关键属性}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{单侧传动矩阵 $\mathbf  {R}_A$ 与 $\mathbf  {R}_B$ 的计算}{5}{section*.5}\protected@file@percent }
+\newlabel{sec:RA_RB_computation}{{0.3.2}{5}{单侧传动矩阵 $\mathbf {R}_A$ 与 $\mathbf {R}_B$ 的计算}{section*.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{物理模型回顾}{5}{section*.6}\protected@file@percent }
+\newlabel{eq:RA_impl}{{1}{6}{物理模型回顾}{equation.0.1}{}}
+\newlabel{eq:RB_impl}{{2}{6}{物理模型回顾}{equation.0.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{伪代码描述}{6}{section*.7}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces 单侧传动矩阵 $\mathbf  {R}_A$ 与 $\mathbf  {R}_B$ 的计算}}{6}{algorithm.1}\protected@file@percent }
+\newlabel{alg:compute_RA_RB}{{1}{6}{单侧传动矩阵 $\mathbf {R}_A$ 与 $\mathbf {R}_B$ 的计算}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{SDAS 模型类的实现}{7}{section*.8}\protected@file@percent }
+\newlabel{sec:sdas_class}{{0.3.2}{7}{SDAS 模型类的实现}{section*.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{预计算}{7}{section*.9}\protected@file@percent }
+\newlabel{eq:schur_scalars}{{3}{7}{预计算}{equation.0.3}{}}
+\newlabel{eq:schur_det}{{4}{7}{预计算}{equation.0.4}{}}
+\newlabel{eq:schur_SA}{{5}{7}{预计算}{equation.0.5}{}}
+\newlabel{eq:schur_SB}{{6}{7}{预计算}{equation.0.6}{}}
+\newlabel{eq:paper_SA}{{7}{7}{预计算}{equation.0.7}{}}
+\newlabel{eq:paper_SB}{{8}{7}{预计算}{equation.0.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{伪代码描述}{7}{section*.10}\protected@file@percent }
+\newlabel{eq:sigma_to_theta}{{9}{7}{伪代码描述}{equation.0.9}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \texttt  {SDASModel} 构造函数的预计算逻辑}}{8}{algorithm.2}\protected@file@percent }
+\newlabel{alg:sdas_constructor}{{2}{8}{\texttt {SDASModel} 构造函数的预计算逻辑}{algorithm.2}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces \texttt  {solve\_motors()} 的约束选择逻辑}}{8}{algorithm.3}\protected@file@percent }
+\newlabel{alg:solve_motors}{{3}{8}{\texttt {solve\_motors()} 的约束选择逻辑}{algorithm.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{MuJoCo 交互仿真器集成}{9}{section*.11}\protected@file@percent }
+\newlabel{sec:mujoco_integration}{{0.3.2}{9}{MuJoCo 交互仿真器集成}{section*.11}{}}
+\@writefile{toc}{\contentsline {paragraph}{构建阶段}{9}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{运行时的滑块回调机制}{9}{section*.13}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {4}{\ignorespaces MuJoCo 仿真器 \texttt  {synergy\_callback} 回调函数}}{9}{algorithm.4}\protected@file@percent }
+\newlabel{alg:callback}{{4}{9}{MuJoCo 仿真器 \texttt {synergy\_callback} 回调函数}{algorithm.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{SDAS 模型的总体算法流程}{10}{section*.14}\protected@file@percent }
+\newlabel{sec:overall_algorithm}{{0.3.2}{10}{SDAS 模型的总体算法流程}{section*.14}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {5}{\ignorespaces SDAS 模型从 CAD 设计到实时关节角度生成的完整流程}}{10}{algorithm.5}\protected@file@percent }
+\newlabel{alg:overall}{{5}{10}{SDAS 模型从 CAD 设计到实时关节角度生成的完整流程}{algorithm.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{小结}{11}{section*.15}\protected@file@percent }
+\newlabel{sec:summary}{{0.3.2}{11}{小结}{section*.15}{}}
+\gdef \@abspage@last{11}

@@ -127,8 +127,9 @@ class SimulationConfig:
     record_every: int = 10
     output_path: Optional[str] = None
 
-    # ---- Gravity ----
-    gravity: np.ndarray = field(default_factory=lambda: np.array([0, 0, -9.81]))
+    # ---- Gravity (默认为零，不开启重力) ----
+    gravity: np.ndarray = field(default_factory=lambda: np.array([0.0, 0.0, 0.0]))
+
 
     # ---- External forces ----
     external_forces: dict = field(default_factory=dict)
