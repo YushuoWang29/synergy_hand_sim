@@ -1,0 +1,17 @@
+{
+  "duration": 0.08,
+  "dt": 0.004,
+  "steps": 20,
+  "joint_count": 9,
+  "driver_count": 1,
+  "distribution": "joint_space",
+  "rms_error_rad": 0.03536698682078793,
+  "max_abs_error_rad": 0.18352282066583672,
+  "screenshots": [
+    "outputs\\mujoco_sdas\\verify_joint_space\\verify_joint_space_t0.040.png"
+  ],
+  "log_csv": "outputs\\mujoco_sdas\\verify_joint_space\\verify_joint_space_log.csv",
+  "log_npz": "outputs\\mujoco_sdas\\verify_joint_space\\verify_joint_space_log.npz",
+  "comparison_png": "outputs\\mujoco_sdas\\verify_joint_space\\verify_joint_space_geometry_vs_mujoco.png",
+  "mjcf": "outputs\\mujoco_sdas\\verify_joint_space\\verify_joint_space.xml"
+}

@@ -1,0 +1,24 @@
+{
+  "duration": 1.4,
+  "dt": 0.002,
+  "steps": 700,
+  "joint_count": 9,
+  "driver_count": 2,
+  "distribution": "uniform",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 531,
+  "max_contacts": 2,
+  "max_contact_force": 120.23398090573991,
+  "rms_error_rad": 1.023213598357482,
+  "max_abs_error_rad": 2.7612073578723964,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_t0.150.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_t0.750.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_t1.250.png"
+  ],
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_sphere\\mujoco_sdas_grasp_sphere.xml"
+}

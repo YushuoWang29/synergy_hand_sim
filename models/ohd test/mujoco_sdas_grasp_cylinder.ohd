@@ -1,0 +1,72 @@
+{
+  "hand_model_path": "three_finger_gripper_b.ohd",
+  "urdf_path": "../three_finger_gripper_b/three_finger_gripper_b.urdf",
+  "simulation": {
+    "label": "mujoco_sdas_grasp_cylinder",
+    "duration": 1.4,
+    "dt": 0.002,
+    "distribution": {
+      "type": "sdas"
+    },
+    "drivers": [
+      {
+        "name": "sigma_close",
+        "type": "position",
+        "samples": [
+          [0.0, 0.0],
+          [0.25, 7.6],
+          [1.4, 7.6]
+        ]
+      },
+      {
+        "name": "sigma_roll_adapt",
+        "type": "position",
+        "samples": [
+          [0.0, 0.0],
+          [0.55, 0.0],
+          [0.95, -2.6],
+          [1.4, -2.6]
+        ]
+      }
+    ],
+    "control": {
+      "position_kp": 0.006,
+      "force_scale": 0.01
+    },
+    "physics": {
+      "gravity": [0.0, 0.0, 0.0],
+      "body_mass": 0.03,
+      "joint_inertia": 0.00008,
+      "model_scale": 0.001
+    },
+    "contact": {
+      "enabled": true,
+      "hand_contact": true,
+      "object_contact": true,
+      "floor_contact": true,
+      "hand_floor_contact": false,
+      "friction": [1.1, 0.01, 0.0001],
+      "margin": 0.0002,
+      "floor_z": -0.015
+    },
+    "objects": [
+      {
+        "name": "adaptive_cylinder",
+        "type": "cylinder",
+        "pos": [0.045, 0.125, 0.0785],
+        "size": [0.018, 0.03],
+        "rgba": [0.20, 0.62, 0.58, 1.0],
+        "mass": 0.5,
+        "freejoint": true
+      }
+    ],
+    "render": {
+      "width": 1280,
+      "height": 900
+    },
+    "output": {
+      "dir": "../../outputs/mujoco_sdas/grasp_cylinder",
+      "screenshots": [0.15, 0.75, 1.25]
+    }
+  }
+}

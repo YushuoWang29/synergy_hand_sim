@@ -36,6 +36,10 @@ from .integrator import ODEState, DynamicsODE, Integrator
 from .quasi_static import QuasiStaticSolver, QuasiStaticResult
 from .simulator import HandSimulator, SimulationTrajectory
 from .io import SimulationWriter, SimulationReader
+from .mujoco_sdas import (
+    MuJoCoSDASConfig, MuJoCoSDASSimulator, SimulationRunResult,
+    load_ohd_simulation, run_ohd_mujoco_simulation,
+)
 
 __all__ = [
     "SimulationConfig",
@@ -49,4 +53,6 @@ __all__ = [
     "QuasiStaticSolver", "QuasiStaticResult",
     "HandSimulator", "SimulationTrajectory",
     "SimulationWriter", "SimulationReader",
+    "MuJoCoSDASConfig", "MuJoCoSDASSimulator", "SimulationRunResult",
+    "load_ohd_simulation", "run_ohd_mujoco_simulation",
 ]

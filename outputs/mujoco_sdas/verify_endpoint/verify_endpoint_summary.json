@@ -1,0 +1,17 @@
+{
+  "duration": 0.08,
+  "dt": 0.004,
+  "steps": 20,
+  "joint_count": 9,
+  "driver_count": 1,
+  "distribution": "endpoint",
+  "rms_error_rad": 0.030717315002850985,
+  "max_abs_error_rad": 0.09485976186742398,
+  "screenshots": [
+    "outputs\\mujoco_sdas\\verify_endpoint\\verify_endpoint_t0.040.png"
+  ],
+  "log_csv": "outputs\\mujoco_sdas\\verify_endpoint\\verify_endpoint_log.csv",
+  "log_npz": "outputs\\mujoco_sdas\\verify_endpoint\\verify_endpoint_log.npz",
+  "comparison_png": "outputs\\mujoco_sdas\\verify_endpoint\\verify_endpoint_geometry_vs_mujoco.png",
+  "mjcf": "outputs\\mujoco_sdas\\verify_endpoint\\verify_endpoint.xml"
+}
