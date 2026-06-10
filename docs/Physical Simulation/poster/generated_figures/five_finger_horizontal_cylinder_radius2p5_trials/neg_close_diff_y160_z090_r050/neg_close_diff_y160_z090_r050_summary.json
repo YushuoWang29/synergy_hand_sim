@@ -1,0 +1,26 @@
+{
+  "duration": 1.2,
+  "dt": 0.002,
+  "steps": 600,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 53,
+  "max_contacts": 55,
+  "max_contact_force": 11408.833833054892,
+  "rms_error_rad": 0.7933826995664116,
+  "max_abs_error_rad": 1.8959060782496646,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_t0.200.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_t0.550.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_t0.900.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_t1.150.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_trials\\neg_close_diff_y160_z090_r050\\neg_close_diff_y160_z090_r050.xml"
+}

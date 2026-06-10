@@ -168,6 +168,53 @@ class GraspObjectSpec:
 
 
 @dataclass
+class VideoConfig:
+    enabled: bool = False
+    fps: float = 24.0
+    keep_frames: bool = False
+    format: str = "gif"
+
+    @classmethod
+    def from_dict(cls, data: Optional[dict[str, Any]]) -> "VideoConfig":
+        if data is None:
+            return cls()
+        return cls(
+            enabled=bool(data.get("enabled", False)),
+            fps=float(data.get("fps", 24.0)),
+            keep_frames=bool(data.get("keep_frames", False)),
+            format=str(data.get("format", "gif")).lower(),
+        )
+
+
+@dataclass
+class RenderCameraConfig:
+    azimuth: float = 90.0
+    elevation: float = -45.0
+    distance: Optional[float] = None
+    distance_scale: float = 2.15
+    min_distance: float = 0.28
+    max_distance: Optional[float] = 0.62
+    lookat_offset: tuple[float, float, float] = (0.05, 0.08, 0.03)
+
+    @classmethod
+    def from_dict(cls, data: Optional[dict[str, Any]]) -> "RenderCameraConfig":
+        if data is None:
+            return cls()
+        offset = data.get("lookat_offset", data.get("lookatOffset", [0.05, 0.08, 0.03]))
+        return cls(
+            azimuth=float(data.get("azimuth", 90.0)),
+            elevation=float(data.get("elevation", -45.0)),
+            distance=float(data["distance"]) if "distance" in data else None,
+            distance_scale=float(data.get("distance_scale", data.get("distanceScale", 2.15))),
+            min_distance=float(data.get("min_distance", data.get("minDistance", 0.28))),
+            max_distance=float(data["max_distance"]) if "max_distance" in data else (
+                float(data["maxDistance"]) if "maxDistance" in data else 0.62
+            ),
+            lookat_offset=tuple(float(v) for v in offset),  # type: ignore[arg-type]
+        )
+
+
+@dataclass
 class MuJoCoSDASConfig:
     definition_path: Path
     hand_model_path: Path
@@ -180,6 +227,7 @@ class MuJoCoSDASConfig:
     screenshot_times: list[float] = field(default_factory=lambda: [0.25, 0.9])
     width: int = 1280
     height: int = 900
+    camera: RenderCameraConfig = field(default_factory=RenderCameraConfig)
     position_kp: float = 0.012
     force_scale: float = 0.01
     inertia: float = 8.0e-5
@@ -189,6 +237,7 @@ class MuJoCoSDASConfig:
     run_label: str = "mujoco_sdas"
     contact: ContactConfig = field(default_factory=ContactConfig)
     objects: list[GraspObjectSpec] = field(default_factory=list)
+    video: VideoConfig = field(default_factory=VideoConfig)
 
 
 @dataclass
@@ -282,6 +331,9 @@ def load_ohd_simulation(path: str | os.PathLike[str]) -> MuJoCoSDASConfig:
         screenshot_times = [0.25, 0.9]
 
     render = sim.get("render", {})
+    video_raw = sim.get("video", raw.get("video"))
+    if video_raw is None and isinstance(output, dict):
+        video_raw = output.get("video")
     control = sim.get("control", {})
     physics = sim.get("physics", {})
     objects_raw = sim.get("objects", raw.get("objects", [])) or []
@@ -300,6 +352,7 @@ def load_ohd_simulation(path: str | os.PathLike[str]) -> MuJoCoSDASConfig:
         screenshot_times=[float(v) for v in screenshot_times],
         width=int(render.get("width", 1280)),
         height=int(render.get("height", 900)),
+        camera=RenderCameraConfig.from_dict(render.get("camera")),
         position_kp=float(control.get("position_kp", 0.012)),
         force_scale=float(control.get("force_scale", 0.01)),
         inertia=float(physics.get("joint_inertia", 8.0e-5)),
@@ -309,6 +362,7 @@ def load_ohd_simulation(path: str | os.PathLike[str]) -> MuJoCoSDASConfig:
         run_label=str(sim.get("label", definition_path.stem)),
         contact=contact,
         objects=objects,
+        video=VideoConfig.from_dict(video_raw),
     )
 
 
@@ -374,15 +428,15 @@ def build_distribution_matrix(
             raise ValueError(f"Custom distribution has {matrix.shape[0]} rows, expected {n}.")
         return matrix, spec.kind
 
-    if spec.kind in {"sdas", "transmission"}:
+    if spec.kind in {"sdas", "transmission", "fmas"}:
         try:
             sdas = build_sdas_model(design)
             source = np.column_stack(sdas.get_synergy_directions())
-            label = "sdas"
+            label = "fmas" if spec.kind == "fmas" else "sdas"
         except Exception:
             augmented, _ = build_synergy_model(design)
             source = augmented.S_aug
-            label = "adaptive_fallback"
+            label = "fmas_fallback" if spec.kind == "fmas" else "adaptive_fallback"
         return _reorder_distribution(source, urdf_joint_names, mapping), label
 
     if spec.kind == "joint_space":
@@ -813,6 +867,16 @@ class MuJoCoSDASSimulator:
         screenshot_targets = sorted(set(max(0.0, min(self.config.duration, t)) for t in self.config.screenshot_times))
         screenshot_paths: list[Path] = []
         next_shot = 0
+        video_frame_targets: list[float] = []
+        video_frame_paths: list[Path] = []
+        video_path: Optional[Path] = None
+        next_frame = 0
+        if self.config.video.enabled:
+            fps = max(1.0, float(self.config.video.fps))
+            frame_count = max(1, int(math.floor(self.config.duration * fps)) + 1)
+            video_frame_targets = [min(self.config.duration, i / fps) for i in range(frame_count)]
+            frames_dir = self.config.output_dir / f"{self.config.run_label}_frames"
+            frames_dir.mkdir(parents=True, exist_ok=True)
 
         for step in range(1, n_steps + 1):
             t = (step - 1) * self.config.dt
@@ -854,11 +918,29 @@ class MuJoCoSDASSimulator:
                 self.render(shot_path)
                 screenshot_paths.append(shot_path)
                 next_shot += 1
+            while next_frame < len(video_frame_targets) and sim_t >= video_frame_targets[next_frame] - 0.5 * self.config.dt:
+                frame_path = self.config.output_dir / f"{self.config.run_label}_frames" / f"frame_{next_frame:04d}.png"
+                self.render(frame_path)
+                video_frame_paths.append(frame_path)
+                next_frame += 1
 
         if not screenshot_paths:
             shot_path = self.config.output_dir / f"{self.config.run_label}_final.png"
             self.render(shot_path)
             screenshot_paths.append(shot_path)
+        if self.config.video.enabled and video_frame_paths:
+            video_path = self.config.output_dir / f"{self.config.run_label}_video.{self.config.video.format}"
+            self._write_video(video_path, video_frame_paths)
+            if not self.config.video.keep_frames:
+                for frame_path in video_frame_paths:
+                    try:
+                        frame_path.unlink()
+                    except OSError:
+                        pass
+                try:
+                    (self.config.output_dir / f"{self.config.run_label}_frames").rmdir()
+                except OSError:
+                    pass
 
         traj = SimulationTrajectory(
             t=t_log,
@@ -925,6 +1007,7 @@ class MuJoCoSDASSimulator:
             "rms_error_rad": float(np.sqrt(np.mean(err * err))) if err.size else 0.0,
             "max_abs_error_rad": float(np.max(np.abs(err))) if err.size else 0.0,
             "screenshots": [str(path) for path in screenshot_paths],
+            "video": str(video_path) if video_path is not None else None,
             "log_csv": str(log_csv),
             "log_npz": str(log_npz),
             "comparison_png": str(comparison),
@@ -949,6 +1032,27 @@ class MuJoCoSDASSimulator:
             summary=summary,
         )
 
+    def _write_video(self, path: Path, frame_paths: list[Path]) -> None:
+        if self.config.video.format != "gif":
+            raise ValueError("Only GIF video export is currently supported without external encoders.")
+        from PIL import Image
+
+        frames = [Image.open(frame_path).convert("P", palette=Image.ADAPTIVE) for frame_path in frame_paths]
+        if not frames:
+            return
+        duration_ms = int(round(1000.0 / max(1.0, float(self.config.video.fps))))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        frames[0].save(
+            path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=duration_ms,
+            loop=0,
+            optimize=False,
+        )
+        for frame in frames:
+            frame.close()
+
     def render(self, path: Path) -> None:
         import mujoco
 
@@ -958,10 +1062,20 @@ class MuJoCoSDASSimulator:
         try:
             renderer = mujoco.Renderer(self.model, height=self.config.height, width=self.config.width)
             camera = mujoco.MjvCamera()
-            camera.azimuth = 135
-            camera.elevation = -28
-            camera.distance = max(0.35, float(self.model.stat.extent) * 2.7)
-            camera.lookat[:] = self.model.stat.center
+            camera_config = self.config.camera
+            camera.azimuth = camera_config.azimuth
+            camera.elevation = camera_config.elevation
+            if camera_config.distance is None:
+                distance = max(
+                    camera_config.min_distance,
+                    float(self.model.stat.extent) * camera_config.distance_scale,
+                )
+                if camera_config.max_distance is not None:
+                    distance = min(distance, camera_config.max_distance)
+            else:
+                distance = camera_config.distance
+            camera.distance = distance
+            camera.lookat[:] = np.asarray(self.model.stat.center) + np.asarray(camera_config.lookat_offset)
             renderer.update_scene(self.data, camera=camera)
             image = renderer.render()
             renderer.close()

@@ -619,12 +619,42 @@ pip install pytest
 cd E:\SGLab\cable-driven\synergy_hand_sim
 ```
 
-### 2. 最快运行示例
+### 2. 图形化运行
+
+当前已提供 PyQt 图形化入口：
+
+```powershell
+python scripts\run_mujoco_sdas_gui.py
+```
+
+窗口中可以直接选择 `.ohd` 文件、输出目录、仿真总时长、分析步数、抓取物体、物体位置、接触开关和过程 GIF 输出。点击 `Run MuJoCo Simulation` 后，仿真在后台线程运行；完成后右侧会显示 `summary.json` 内容，并预览最后截图或自动播放 GIF。
+
+### 3. 最快运行示例
 
 直接运行示例 `.ohd`：
 
 ```powershell
 python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_step.ohd"
+```
+
+也可以通过终端直接覆盖分析步和抓取物体：
+
+```powershell
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_step.ohd" --duration 1.0 --steps 500 --object cylinder --out outputs\mujoco_sdas\cli_cylinder_demo
+```
+
+其中 `--steps` 表示分析步数，程序会自动令 `dt = duration / steps`。`--object` 可选 `keep`、`none`、`box`、`cylinder`、`sphere`、`scanned_mug`。当前版本的正式用户入口是这个终端脚本；`.ohd` 仍然是完整实验定义文件，终端参数用于快速覆盖常用选项。
+
+默认输出是关键时刻截图，不生成过程视频。需要视频时加 `--video`：
+
+```powershell
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_scanned_mug.ohd" --video --video-fps 12
+```
+
+视频输出为 GIF，例如：
+
+```text
+outputs/mujoco_sdas/grasp_scanned_mug/mujoco_sdas_grasp_scanned_mug_video.gif
 ```
 
 运行后会在以下目录生成结果：

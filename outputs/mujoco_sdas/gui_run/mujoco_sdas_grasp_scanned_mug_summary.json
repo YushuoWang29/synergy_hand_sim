@@ -1,0 +1,25 @@
+{
+  "duration": 1.4,
+  "dt": 0.002,
+  "steps": 700,
+  "joint_count": 9,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 0,
+  "contact_enabled": true,
+  "contact_steps": 0,
+  "max_contacts": 0,
+  "max_contact_force": 0.0,
+  "rms_error_rad": 0.19283500928136887,
+  "max_abs_error_rad": 0.5449022996811941,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_t0.150.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_t0.750.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_t1.250.png"
+  ],
+  "video": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_video.gif",
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_sdas_grasp_scanned_mug.xml"
+}

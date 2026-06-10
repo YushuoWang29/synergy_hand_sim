@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="950" viewBox="0 0 1800 950">
+  <defs>
+    <style>
+      .bg { fill: #f8f9f4; }
+      .title { font: 700 58px Arial, Helvetica, sans-serif; fill: #1f2b30; }
+      .subtitle { font: 400 30px Arial, Helvetica, sans-serif; fill: #53656d; }
+      .box { stroke-width: 4; rx: 22; }
+      .input { fill: #eaf4f7; stroke: #5c97ad; }
+      .geom { fill: #fff3dc; stroke: #c9942f; }
+      .fmas { fill: #f3e9f8; stroke: #7c4c9a; }
+      .mujoco { fill: #e8f5ef; stroke: #4f966f; }
+      .output { fill: #eef1f3; stroke: #788990; }
+      .box-title { font: 700 36px Arial, Helvetica, sans-serif; fill: #223138; }
+      .box-text { font: 400 27px Arial, Helvetica, sans-serif; fill: #31444c; }
+      .formula { font: 700 28px Consolas, "Courier New", monospace; fill: #6c2f84; }
+      .arrow-line { stroke: #2d3d43; stroke-width: 8; stroke-linecap: round; }
+      .arrow-head { fill: #2d3d43; }
+      .note { font: 400 26px Arial, Helvetica, sans-serif; fill: #53656d; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="950"/>
+
+  <text class="title" x="70" y="90">FMAS Simulation Pipeline</text>
+  <text class="subtitle" x="72" y="132">A complete simulation path from origami hand design to numerical contact response</text>
+
+  <rect class="box input" x="70" y="235" width="270" height="360" rx="22" ry="22"/>
+  <text class="box-title" x="105" y="292">.ohd Design</text>
+  <text class="box-text" x="105" y="350">faces and creases</text>
+  <text class="box-text" x="105" y="395">joints and holes</text>
+  <text class="box-text" x="105" y="440">actuators</text>
+  <text class="box-text" x="105" y="485">tendon routes</text>
+  <text class="box-text" x="105" y="545">driver sequences</text>
+
+  <rect class="box geom" x="450" y="235" width="300" height="360" rx="22" ry="22"/>
+  <text class="box-title" x="485" y="292">Geometry</text>
+  <text class="box-title" x="485" y="335">and Kinematics</text>
+  <text class="box-text" x="485" y="400">topology graph</text>
+  <text class="box-text" x="485" y="445">reference motion</text>
+  <text class="formula" x="485" y="495">q_ref(t)</text>
+  <text class="box-text" x="485" y="545">URDF / STL export</text>
+
+  <rect class="box fmas" x="860" y="235" width="300" height="360" rx="22" ry="22"/>
+  <text class="box-title" x="900" y="292">FMAS</text>
+  <text class="box-title" x="900" y="335">Transmission</text>
+  <text class="formula" x="900" y="400">R_A, R_B</text>
+  <text class="box-text" x="900" y="450">two-ended tendon</text>
+  <text class="box-text" x="900" y="495">closing mode</text>
+  <text class="box-text" x="900" y="540">redistribution mode</text>
+
+  <rect class="box mujoco" x="1270" y="235" width="300" height="360" rx="22" ry="22"/>
+  <text class="box-title" x="1310" y="292">MuJoCo</text>
+  <text class="box-title" x="1310" y="335">Numerics</text>
+  <text class="formula" x="1310" y="400">tau(t)</text>
+  <text class="box-text" x="1310" y="450">qfrc_applied</text>
+  <text class="formula" x="1310" y="500">mj_step()</text>
+  <text class="box-text" x="1310" y="550">contact constraints</text>
+
+  <rect class="box output" x="560" y="720" width="680" height="140" rx="22" ry="22"/>
+  <text class="box-title" x="600" y="775">Simulation Outputs</text>
+  <text class="box-text" x="600" y="818">q(t), q_dot(t), contact logs, force summary</text>
+  <text class="box-text" x="600" y="852">screenshots, GIF, and MJCF audit file</text>
+
+  <!-- Manual arrows: line plus triangle, no marker alignment issues. -->
+  <line class="arrow-line" x1="360" y1="415" x2="410" y2="415"/>
+  <polygon class="arrow-head" points="440,415 410,397 410,433"/>
+
+  <line class="arrow-line" x1="770" y1="415" x2="820" y2="415"/>
+  <polygon class="arrow-head" points="850,415 820,397 820,433"/>
+
+  <line class="arrow-line" x1="1180" y1="415" x2="1230" y2="415"/>
+  <polygon class="arrow-head" points="1260,415 1230,397 1230,433"/>
+
+  <path class="arrow-line" d="M1420 610 C1420 685 1180 690 1088 722" fill="none"/>
+  <polygon class="arrow-head" points="1060,720 1095,704 1085,742"/>
+
+  <path class="arrow-line" d="M600 610 C600 675 665 690 732 728" fill="none"/>
+  <polygon class="arrow-head" points="760,720 724,710 739,746"/>
+
+  <text class="note" x="72" y="910">Use as the main Methodology figure. The diagram emphasizes the simulation layers rather than software modules.</text>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <rect width="1200" height="620" fill="#f8fafc"/>
+  <rect x="24" y="24" width="1152" height="572" rx="18" fill="#ffffff" stroke="#334155" stroke-width="4" stroke-dasharray="18 12"/>
+  <text x="600" y="92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#0f172a">Figure Placeholder</text>
+  <text x="600" y="145" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#334155">Rigid, soft, adaptive, and SDAS/FMAs synergy models</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#0f172a" text-anchor="middle">
+    <rect x="80" y="230" width="230" height="170" rx="16" fill="#e0f2fe" stroke="#0284c7" stroke-width="3"/>
+    <text x="195" y="305" font-weight="700">Rigid</text>
+    <text x="195" y="350">q = S sigma</text>
+    <rect x="350" y="230" width="230" height="170" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
+    <text x="465" y="305" font-weight="700">Soft</text>
+    <text x="465" y="350">contact adapts</text>
+    <rect x="620" y="230" width="230" height="170" rx="16" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+    <text x="735" y="305" font-weight="700">Adaptive</text>
+    <text x="735" y="350">R q = x</text>
+    <rect x="890" y="230" width="230" height="170" rx="16" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+    <text x="1005" y="305" font-weight="700">SDAS/FMAs</text>
+    <text x="1005" y="350">R_A, R_B</text>
+  </g>
+</svg>

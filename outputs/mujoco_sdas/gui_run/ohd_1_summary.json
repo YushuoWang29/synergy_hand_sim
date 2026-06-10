@@ -1,0 +1,24 @@
+{
+  "duration": 1.4,
+  "dt": 0.002,
+  "steps": 700,
+  "joint_count": 2,
+  "driver_count": 2,
+  "distribution": "adaptive_fallback",
+  "object_count": 0,
+  "contact_enabled": true,
+  "contact_steps": 0,
+  "max_contacts": 0,
+  "max_contact_force": 0.0,
+  "rms_error_rad": 0.4032455182970426,
+  "max_abs_error_rad": 0.8123929479521491,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_t0.250.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_t0.900.png"
+  ],
+  "video": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_video.gif",
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\ohd_1.xml"
+}

@@ -1,0 +1,374 @@
+[
+  {
+    "label": "pos_y185_z115_r050",
+    "y": 0.185,
+    "z": 0.115,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 34,
+      "max_contacts": 53,
+      "max_contact_force": 311.63697898579767,
+      "rms_error_rad": 0.8823043839866552,
+      "max_abs_error_rad": 1.8865152133817942,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z115_r050\\pos_y185_z115_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y185_z130_r050",
+    "y": 0.185,
+    "z": 0.13,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 510,
+      "max_contacts": 20,
+      "max_contact_force": 3.879474336333071,
+      "rms_error_rad": 0.14776627864796502,
+      "max_abs_error_rad": 0.3295538847103836,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z130_r050\\pos_y185_z130_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y185_z145_r050",
+    "y": 0.185,
+    "z": 0.145,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 95,
+      "max_contacts": 24,
+      "max_contact_force": 1.0698396795714562,
+      "rms_error_rad": 0.12777773631836306,
+      "max_abs_error_rad": 0.30117210503457137,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y185_z145_r050\\pos_y185_z145_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y205_z115_r050",
+    "y": 0.205,
+    "z": 0.115,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 25,
+      "max_contacts": 54,
+      "max_contact_force": 75.37116494604535,
+      "rms_error_rad": 0.8299315308906822,
+      "max_abs_error_rad": 1.9193991251860003,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z115_r050\\pos_y205_z115_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y205_z130_r050",
+    "y": 0.205,
+    "z": 0.13,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 525,
+      "max_contacts": 20,
+      "max_contact_force": 2.4545533540821443,
+      "rms_error_rad": 0.16542981040044613,
+      "max_abs_error_rad": 0.34061792930241797,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z130_r050\\pos_y205_z130_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y205_z145_r050",
+    "y": 0.205,
+    "z": 0.145,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 198,
+      "max_contacts": 17,
+      "max_contact_force": 1.3443734120489708,
+      "rms_error_rad": 0.13238071341297244,
+      "max_abs_error_rad": 0.30117210503457137,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y205_z145_r050\\pos_y205_z145_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y225_z115_r050",
+    "y": 0.225,
+    "z": 0.115,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 26,
+      "max_contacts": 36,
+      "max_contact_force": 31.25614658053431,
+      "rms_error_rad": 0.7020814531219212,
+      "max_abs_error_rad": 1.5635028860295295,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z115_r050\\pos_y225_z115_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y225_z130_r050",
+    "y": 0.225,
+    "z": 0.13,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 557,
+      "max_contacts": 20,
+      "max_contact_force": 0.29372233493843014,
+      "rms_error_rad": 0.17869881347424613,
+      "max_abs_error_rad": 0.38840547568267875,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z130_r050\\pos_y225_z130_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y225_z145_r050",
+    "y": 0.225,
+    "z": 0.145,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 301,
+      "max_contacts": 17,
+      "max_contact_force": 0.7770461395447523,
+      "rms_error_rad": 0.14309199010373375,
+      "max_abs_error_rad": 0.30117210503457137,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y225_z145_r050\\pos_y225_z145_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y245_z115_r050",
+    "y": 0.245,
+    "z": 0.115,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 30,
+      "max_contacts": 31,
+      "max_contact_force": 21.95724028642597,
+      "rms_error_rad": 0.5173223064979784,
+      "max_abs_error_rad": 1.1145129418748174,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z115_r050\\pos_y245_z115_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y245_z130_r050",
+    "y": 0.245,
+    "z": 0.13,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 584,
+      "max_contacts": 18,
+      "max_contact_force": 0.2665751752014866,
+      "rms_error_rad": 0.18325222473016461,
+      "max_abs_error_rad": 0.40297572892817113,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z130_r050\\pos_y245_z130_r050.xml"
+    }
+  },
+  {
+    "label": "pos_y245_z145_r050",
+    "y": 0.245,
+    "z": 0.145,
+    "summary": {
+      "duration": 1.25,
+      "dt": 0.002,
+      "steps": 625,
+      "joint_count": 15,
+      "driver_count": 2,
+      "distribution": "sdas",
+      "object_count": 1,
+      "contact_enabled": true,
+      "contact_steps": 305,
+      "max_contacts": 11,
+      "max_contact_force": 2.7037983401070464,
+      "rms_error_rad": 0.14512579249438845,
+      "max_abs_error_rad": 0.3031690600319117,
+      "screenshots": [
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_t0.250.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_t0.550.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_t0.850.png",
+        "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_t1.150.png"
+      ],
+      "video": null,
+      "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_log.csv",
+      "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_log.npz",
+      "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050_geometry_vs_mujoco.png",
+      "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_positive_grasp_sweep\\pos_y245_z145_r050\\pos_y245_z145_r050.xml"
+    }
+  }
+]

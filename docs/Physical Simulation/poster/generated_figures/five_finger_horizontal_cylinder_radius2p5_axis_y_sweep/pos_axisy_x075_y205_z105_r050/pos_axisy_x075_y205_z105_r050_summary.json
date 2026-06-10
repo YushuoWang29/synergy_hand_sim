@@ -1,0 +1,26 @@
+{
+  "duration": 1.1,
+  "dt": 0.002,
+  "steps": 550,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 30,
+  "max_contacts": 28,
+  "max_contact_force": 6211.713247993236,
+  "rms_error_rad": 0.5338946131589689,
+  "max_abs_error_rad": 1.3866852417305813,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_t0.350.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_t0.650.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_t0.950.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_t1.100.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_axis_y_sweep\\pos_axisy_x075_y205_z105_r050\\pos_axisy_x075_y205_z105_r050.xml"
+}

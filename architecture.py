@@ -294,4 +294,107 @@ draw.text(
 
 img.save("SDAS_software_architecture.png")
 
+
+def draw_english_version():
+    """Draw the English FMAS architecture figure using the same layout."""
+    global img, draw
+
+    old_img, old_draw = img, draw
+    img = Image.new("RGB", (W, H), "white")
+    draw = ImageDraw.Draw(img)
+
+    title = "FMAS Origami Dexterous Hand Simulation Framework"
+    b = draw.textbbox((0, 0), title, font=title_font)
+    draw.text(((W - (b[2] - b[0])) / 2, 35), title, font=title_font, fill=BLACK)
+
+    layer_x1, layer_x2 = 40, 320
+    for y, txt in zip(
+        [130, 350, 570, 790, 1010],
+        [
+            "Design Layer",
+            "Data Model\nLayer",
+            "Transmission\nLayer",
+            "Synergy Solver\nLayer",
+            "Simulation &\nVisualization",
+        ],
+    ):
+        draw.rounded_rectangle((layer_x1, y, layer_x2, y + 120), radius=15, outline=BLACK, width=3)
+        center_text(txt, (layer_x1, y, layer_x2, y + 120), layer_font)
+
+    box(
+        390, 120, 860, 250,
+        "Origami Hand CAD",
+        "PyQt5-based graphical design editor",
+    )
+
+    box(
+        1010, 120, 1420, 250,
+        ".ohd File",
+        "JSON geometry / topology data",
+    )
+
+    box(
+        1750, 120, 2280, 250,
+        "URDF Exporter",
+        "MuJoCo / robot model generation",
+    )
+
+    left_x1, left_x2 = 915, 1515
+
+    box(
+        left_x1, 340, left_x2, 490,
+        "OrigamiHandDesign",
+        "fold_lines / faces /\n"
+        "tendons / pulleys / actuators",
+    )
+
+    box(
+        left_x1, 560, left_x2, 710,
+        "TransmissionBuilder",
+        "compute_R_one_sided()\n"
+        "compute transmission vectors R_A and R_B",
+    )
+
+    box(
+        left_x1, 780, left_x2, 930,
+        "FMASModel",
+        "compute synergy vectors S_A and S_B",
+    )
+
+    box(
+        left_x1, 1000, left_x2, 1150,
+        "MuJoCoSimulator",
+        "real-time interactive physics simulation",
+    )
+
+    box(
+        1715, 1000, 2315, 1150,
+        "GLFW Viewer",
+        "3D rendering / sliders / joint monitoring",
+    )
+
+    arrow(860, 185, 1010, 185, "save")
+    arrow(1420, 185, 1750, 185, "export")
+    arrow(1215, 250, 1215, 340, "load")
+    arrow(1215, 490, 1215, 560)
+    arrow(1215, 710, 1215, 780, "R_A  R_B", label_y_shift=-12)
+    arrow(1215, 930, 1215, 1000, "S_A  S_B", label_y_shift=-12)
+    arrow(2015, 250, 2015, 1000, "URDF")
+    arrow(left_x2, 1075, 1715, 1075, "callback")
+
+    footer = "synergy_hand_sim - Friction-Modulated Adaptive Synergy framework"
+    b = draw.textbbox((0, 0), footer, font=sub_font)
+    draw.text(((W - (b[2] - b[0])) / 2, 1400), footer, font=sub_font, fill=GRAY)
+
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    out_path = os.path.join(project_root, "doc", "figure", "FMAS_software_architecture_en.png")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    img.save(out_path)
+    print(f"Saved English figure: {out_path}")
+
+    img, draw = old_img, old_draw
+
+
+draw_english_version()
+
 print("已保存图片：SDAS_software_architecture.png")

@@ -1,0 +1,25 @@
+{
+  "duration": 1.2,
+  "dt": 0.002,
+  "steps": 600,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 28,
+  "max_contacts": 24,
+  "max_contact_force": 2568.3532710223703,
+  "rms_error_rad": 0.6339990094393556,
+  "max_abs_error_rad": 1.4723621097631023,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_t0.350.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_t0.750.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_t1.150.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\five_finger_horizontal_cylinder_trials\\x_y150_z080_r018_h065\\x_y150_z080_r018_h065.xml"
+}

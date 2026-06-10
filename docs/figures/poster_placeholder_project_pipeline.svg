@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <rect width="1200" height="620" fill="#f8fafc"/>
+  <rect x="24" y="24" width="1152" height="572" rx="18" fill="#ffffff" stroke="#334155" stroke-width="4" stroke-dasharray="18 12"/>
+  <text x="600" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#0f172a">Figure Placeholder</text>
+  <text x="600" y="155" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#334155">Complete synergy_hand_sim project pipeline</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="26" fill="#0f172a" text-anchor="middle">
+    <rect x="75" y="270" width="185" height="100" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+    <text x="167" y="312">OHD / DXF</text><text x="167" y="345">design</text>
+    <rect x="315" y="270" width="185" height="100" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
+    <text x="407" y="312">Geometry</text><text x="407" y="345">model</text>
+    <rect x="555" y="270" width="185" height="100" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+    <text x="647" y="312">SDAS</text><text x="647" y="345">model</text>
+    <rect x="795" y="270" width="185" height="100" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+    <text x="887" y="312">MuJoCo</text><text x="887" y="345">simulation</text>
+    <rect x="1035" y="270" width="120" height="100" rx="14" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+    <text x="1095" y="312">Logs</text><text x="1095" y="345">Images</text>
+  </g>
+  <g stroke="#475569" stroke-width="7" marker-end="url(#arrow)">
+    <path d="M270 320 L305 320"/>
+    <path d="M510 320 L545 320"/>
+    <path d="M750 320 L785 320"/>
+    <path d="M990 320 L1025 320"/>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#475569"/>
+    </marker>
+  </defs>
+</svg>

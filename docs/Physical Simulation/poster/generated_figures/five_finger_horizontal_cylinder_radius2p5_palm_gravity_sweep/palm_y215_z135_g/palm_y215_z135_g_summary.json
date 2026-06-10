@@ -1,0 +1,26 @@
+{
+  "duration": 1.5,
+  "dt": 0.002,
+  "steps": 750,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 688,
+  "max_contacts": 40,
+  "max_contact_force": 50.41596385184002,
+  "rms_error_rad": 1.08669307688451,
+  "max_abs_error_rad": 1.9778748774249115,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_t0.200.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_t0.650.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_t1.050.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_t1.500.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_palm_gravity_sweep\\palm_y215_z135_g\\palm_y215_z135_g.xml"
+}

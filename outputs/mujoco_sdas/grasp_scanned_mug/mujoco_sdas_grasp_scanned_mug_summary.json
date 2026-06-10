@@ -17,6 +17,7 @@
     "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_t0.750.png",
     "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_t1.250.png"
   ],
+  "video": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_video.gif",
   "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_log.csv",
   "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_log.npz",
   "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\grasp_scanned_mug\\mujoco_sdas_grasp_scanned_mug_geometry_vs_mujoco.png",

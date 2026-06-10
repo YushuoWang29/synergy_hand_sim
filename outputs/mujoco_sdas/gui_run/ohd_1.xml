@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<mujoco model="ohd_1_sdas">
+  <compiler angle="radian" meshdir="" autolimits="true"/>
+  <option timestep="0.002000000" integrator="RK4" gravity="0.0 0.0 0.0"/>
+  <visual>
+    <global offwidth="1280" offheight="900"/>
+    <quality offsamples="8" shadowsize="4096"/>
+    <headlight ambient="0.24 0.24 0.26" diffuse="0.65 0.65 0.62" specular="0.25 0.25 0.25"/>
+    <rgba haze="0.86 0.88 0.90 1"/>
+  </visual>
+  <asset>
+    <material name="base_mat" rgba="0.16 0.18 0.19 1"/>
+    <material name="hand_mat" rgba="0.18 0.52 0.76 1" specular="0.25" shininess="0.25"/>
+    <material name="hand_alt" rgba="0.90 0.54 0.20 1" specular="0.25" shininess="0.25"/>
+    <mesh name="mesh_face_0" file="E:/SGLab/cable-driven/synergy_hand_sim/models/ohd_1/meshes/face_0.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mesh_face_1" file="E:/SGLab/cable-driven/synergy_hand_sim/models/ohd_1/meshes/face_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mesh_face_2" file="E:/SGLab/cable-driven/synergy_hand_sim/models/ohd_1/meshes/face_2.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+  <worldbody>
+    <light name="key" directional="true" pos="1.8 -2.4 3.0" dir="-1.8 2.4 -3.0" diffuse="0.78 0.75 0.68"/>
+    <light name="fill" directional="true" pos="-2.0 1.5 2.0" dir="2.0 -1.5 -2.0" diffuse="0.35 0.42 0.50"/>
+    <geom name="floor" type="plane" size="1.4 1.4 0.02" pos="0 0 -0.015" material="base_mat" contype="4" conaffinity="2" friction="1.1 0.01 0.0001" condim="3" margin="0.0002"/>
+    <body name="face_0" pos="0 0 0.080000000">
+      <inertial pos="0 0 0" mass="0.030000000" diaginertia="0.000080000 0.000080000 0.000080000"/>
+      <geom name="geom_face_0" type="mesh" mesh="mesh_face_0" material="hand_mat" contype="1" conaffinity="2" friction="1.1 0.01 0.0001" condim="3" margin="0.0002"/>
+      <body name="face_1" pos="0.025000000 0.050000000 0.000000000">
+        <inertial pos="0 0 0" mass="0.030000000" diaginertia="0.000080000 0.000080000 0.000080000"/>
+        <joint name="joint_0" type="hinge" pos="0 0 0" axis="1.000000000 0.000000000 0.000000000" range="-1.57 1.57" limited="true" stiffness="0" armature="0.000080000"/>
+        <geom name="geom_face_1" type="mesh" mesh="mesh_face_1" material="hand_alt" contype="1" conaffinity="2" friction="1.1 0.01 0.0001" condim="3" margin="0.0002"/>
+        <body name="face_2" pos="0.000000000 0.050000000 0.000000000">
+          <inertial pos="0 0 0" mass="0.030000000" diaginertia="0.000080000 0.000080000 0.000080000"/>
+          <joint name="joint_1" type="hinge" pos="0 0 0" axis="1.000000000 0.000000000 0.000000000" range="-1.57 1.57" limited="true" stiffness="0" armature="0.000080000"/>
+          <geom name="geom_face_2" type="mesh" mesh="mesh_face_2" material="hand_mat" contype="1" conaffinity="2" friction="1.1 0.01 0.0001" condim="3" margin="0.0002"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

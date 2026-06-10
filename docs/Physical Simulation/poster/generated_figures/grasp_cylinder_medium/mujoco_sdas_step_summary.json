@@ -1,0 +1,24 @@
+{
+  "duration": 1.4,
+  "dt": 0.002,
+  "steps": 700,
+  "joint_count": 9,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 701,
+  "max_contacts": 17,
+  "max_contact_force": 1849.301843825786,
+  "rms_error_rad": 0.21029564916130755,
+  "max_abs_error_rad": 0.7160466825747629,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step_t0.350.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step_t1.050.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\grasp_cylinder_medium\\mujoco_sdas_step.xml"
+}

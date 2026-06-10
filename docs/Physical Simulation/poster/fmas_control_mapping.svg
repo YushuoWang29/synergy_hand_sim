@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#2b3a40"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#6b2d83"/>
+    </marker>
+    <style>
+      .bg { fill: #fbfbf8; }
+      .title { font: 700 46px Arial, Helvetica, sans-serif; fill: #1d2528; }
+      .subtitle { font: 400 22px Arial, Helvetica, sans-serif; fill: #516168; }
+      .box { fill: #ffffff; stroke: #c9d1d4; stroke-width: 2; rx: 16; }
+      .driver { fill: #eef5f7; stroke: #78a3b3; }
+      .fmas { fill: #f4eef8; stroke: #8b5aa8; }
+      .target { fill: #fff5e5; stroke: #d9a448; }
+      .torque { fill: #fdf0ec; stroke: #c87b60; }
+      .mujoco { fill: #eaf6ef; stroke: #5b9a78; }
+      .output { fill: #eff2f4; stroke: #87949b; }
+      .box-title { font: 700 25px Arial, Helvetica, sans-serif; fill: #24343b; }
+      .box-text { font: 400 18px Arial, Helvetica, sans-serif; fill: #34484f; }
+      .small { font: 400 15px Arial, Helvetica, sans-serif; fill: #5a6a70; }
+      .formula { font: 700 21px Consolas, "Courier New", monospace; fill: #662b83; }
+      .formula-dark { font: 700 20px Consolas, "Courier New", monospace; fill: #203038; }
+      .arrow { stroke: #2b3a40; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .purple-arrow { stroke: #6b2d83; stroke-width: 4; fill: none; marker-end: url(#arrow-purple); }
+      .feedback { stroke: #6b2d83; stroke-width: 4; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrow-purple); }
+      .axis { stroke: #63757c; stroke-width: 2; }
+      .curve { stroke: #2f7f9f; stroke-width: 4; fill: none; }
+      .point { fill: #2f7f9f; }
+      .grid { stroke: #9c7ab0; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="900"/>
+
+  <text class="title" x="70" y="78">FMAS Control Mapping into MuJoCo</text>
+  <text class="subtitle" x="72" y="114">Driver time series become reference motion and generalized forces for numerical dynamics and contact</text>
+
+  <rect class="box driver" x="70" y="245" width="250" height="250"/>
+  <text class="box-title" x="98" y="285">Driver time series</text>
+  <text class="box-text" x="98" y="323">position samples</text>
+  <text class="box-text" x="98" y="353">velocity samples</text>
+  <text class="box-text" x="98" y="383">force samples</text>
+  <line class="axis" x1="105" y1="455" x2="280" y2="455"/>
+  <line class="axis" x1="105" y1="455" x2="105" y2="405"/>
+  <path class="curve" d="M105 452 C130 447 142 430 165 425 C190 419 205 418 232 400 C250 388 265 385 280 383"/>
+  <circle class="point" cx="105" cy="452" r="5"/>
+  <circle class="point" cx="165" cy="425" r="5"/>
+  <circle class="point" cx="232" cy="400" r="5"/>
+  <circle class="point" cx="280" cy="383" r="5"/>
+  <text class="formula" x="100" y="535">sigma(t), f_sigma(t)</text>
+
+  <rect class="box fmas" x="405" y="245" width="250" height="250"/>
+  <text class="box-title" x="445" y="285">FMAS distribution</text>
+  <text class="box-text" x="445" y="323">built from tendon routing</text>
+  <text class="formula" x="463" y="363">R_A, R_B</text>
+  <rect x="462" y="395" width="105" height="80" fill="#ffffff" stroke="#8b5aa8" stroke-width="2" rx="6"/>
+  <line class="grid" x1="497" y1="395" x2="497" y2="475"/>
+  <line class="grid" x1="532" y1="395" x2="532" y2="475"/>
+  <line class="grid" x1="462" y1="422" x2="567" y2="422"/>
+  <line class="grid" x1="462" y1="449" x2="567" y2="449"/>
+  <text class="formula" x="580" y="443">B_sigma</text>
+
+  <rect class="box target" x="740" y="245" width="250" height="250"/>
+  <text class="box-title" x="785" y="285">Reference motion</text>
+  <text class="formula" x="775" y="350">q_ref(t)</text>
+  <text class="formula-dark" x="775" y="395">= B_sigma sigma(t)</text>
+  <text class="box-text" x="775" y="450">joint-space target</text>
+  <text class="small" x="775" y="480">from geometry and FMAS</text>
+
+  <rect class="box torque" x="1070" y="245" width="330" height="250"/>
+  <text class="box-title" x="1108" y="285">Generalized force input</text>
+  <text class="formula" x="1104" y="342">tau(t) = Kp(q_ref - q)</text>
+  <text class="formula" x="1176" y="382">+ force_scale B_sigma f_sigma</text>
+  <text class="box-text" x="1104" y="440">written to qfrc_applied</text>
+  <text class="small" x="1104" y="470">no velocity feedback term in this experiment</text>
+
+  <rect class="box mujoco" x="1070" y="605" width="330" height="180"/>
+  <text class="box-title" x="1138" y="646">MuJoCo numerical layer</text>
+  <text class="formula" x="1164" y="692">mj_step()</text>
+  <text class="box-text" x="1124" y="735">dynamics, constraints, contact</text>
+
+  <rect class="box output" x="710" y="605" width="280" height="180"/>
+  <text class="box-title" x="760" y="646">Simulation outputs</text>
+  <text class="formula" x="760" y="690">q(t), q_dot(t)</text>
+  <text class="box-text" x="760" y="730">ncon and contact force</text>
+  <text class="box-text" x="760" y="760">screenshots and GIF</text>
+
+  <rect class="box output" x="410" y="605" width="220" height="110"/>
+  <text class="box-title" x="448" y="648">Error signal</text>
+  <text class="formula" x="452" y="690">q_ref(t) - q(t)</text>
+
+  <path class="arrow" d="M320 370 L405 370"/>
+  <path class="arrow" d="M655 370 L740 370"/>
+  <path class="arrow" d="M990 370 L1070 370"/>
+  <path class="arrow" d="M1235 495 L1235 605"/>
+  <path class="arrow" d="M1070 695 L990 695"/>
+
+  <path class="feedback" d="M710 690 C640 690 635 660 630 660"/>
+  <path class="feedback" d="M410 660 C340 660 340 565 740 485"/>
+  <path class="purple-arrow" d="M630 660 C790 590 930 500 1070 420"/>
+
+  <text class="small" x="92" y="820">Figure use: control-law diagram. It explains how FMAS produces a MuJoCo input rather than directly setting the final hand pose.</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+  <rect width="1200" height="620" fill="#f8fafc"/>
+  <rect x="24" y="24" width="1152" height="572" rx="18" fill="#ffffff" stroke="#334155" stroke-width="4" stroke-dasharray="18 12"/>
+  <text x="600" y="92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#0f172a">Figure Placeholder</text>
+  <text x="600" y="145" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#334155">Experimental result panel layout</text>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="25" fill="#0f172a" text-anchor="middle">
+    <rect x="85" y="220" width="300" height="165" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+    <text x="235" y="300">Geometry / CAD</text>
+    <rect x="440" y="220" width="300" height="165" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
+    <text x="590" y="300">Trajectory comparison</text>
+    <rect x="795" y="220" width="300" height="165" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+    <text x="945" y="300">Contact grasping</text>
+    <rect x="230" y="430" width="740" height="85" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/>
+    <text x="600" y="482">Small table: contact steps, max contacts, RMS error</text>
+  </g>
+</svg>

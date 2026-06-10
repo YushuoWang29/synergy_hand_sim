@@ -1,0 +1,26 @@
+{
+  "duration": 1.25,
+  "dt": 0.002,
+  "steps": 625,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 30,
+  "max_contacts": 18,
+  "max_contact_force": 6.99109028850224,
+  "rms_error_rad": 0.49837766971184827,
+  "max_abs_error_rad": 1.0307919562093184,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_t0.300.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_t0.650.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_t0.950.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_t1.250.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_position_sweep\\free_y250_z040_r050\\free_y250_z040_r050.xml"
+}

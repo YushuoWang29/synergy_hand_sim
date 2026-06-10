@@ -1,0 +1,78 @@
+{
+  "hand_model_path": "five_finger_1.ohd",
+  "urdf_path": "../five_finger_1/five_finger_1.urdf",
+  "simulation": {
+    "label": "mujoco_fmas_five_finger_horizontal_cylinder",
+    "duration": 1.2,
+    "dt": 0.002,
+    "distribution": {
+      "type": "fmas"
+    },
+    "drivers": [
+      {
+        "name": "sigma_close",
+        "type": "position",
+        "samples": [
+          [0.0, 0.0],
+          [0.25, 0.0],
+          [1.05, 24.0],
+          [1.2, 24.0]
+        ]
+      },
+      {
+        "name": "sigma_diff",
+        "type": "position",
+        "samples": [
+          [0.0, 0.0],
+          [1.2, 0.0]
+        ]
+      }
+    ],
+    "control": {
+      "position_kp": 0.006,
+      "force_scale": 0.01
+    },
+    "physics": {
+      "gravity": [0.0, 0.0, 0.0],
+      "body_mass": 0.03,
+      "joint_inertia": 0.00008,
+      "model_scale": 0.001
+    },
+    "contact": {
+      "enabled": true,
+      "hand_contact": true,
+      "object_contact": true,
+      "floor_contact": true,
+      "hand_floor_contact": false,
+      "friction": [2.0, 0.05, 0.001],
+      "margin": 0.0001,
+      "floor_z": -0.08
+    },
+    "objects": [
+      {
+        "name": "fixed_horizontal_cylinder_radius2p5",
+        "type": "cylinder",
+        "pos": [0.075, 0.145, 0.130],
+        "quat": [0.707106781, 0.0, 0.707106781, 0.0],
+        "size": [0.050, 0.075],
+        "rgba": [0.20, 0.62, 0.58, 0.5],
+        "mass": 1.0,
+        "freejoint": false
+      }
+    ],
+    "render": {
+      "width": 1280,
+      "height": 900,
+      "camera": {
+        "azimuth": 80.0,
+        "elevation": -48.0,
+        "distance": 0.58,
+        "lookat_offset": [0.060, 0.090, 0.035]
+      }
+    },
+    "output": {
+      "dir": "../../outputs/mujoco_sdas/fmas_five_finger_horizontal_cylinder",
+      "screenshots": [0.3, 0.75, 1.2]
+    }
+  }
+}

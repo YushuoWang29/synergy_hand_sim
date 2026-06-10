@@ -1,0 +1,25 @@
+{
+  "duration": 1.4,
+  "dt": 0.002,
+  "steps": 700,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "fmas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 373,
+  "max_contacts": 6,
+  "max_contact_force": 4108.225669666616,
+  "rms_error_rad": 0.2604743980955008,
+  "max_abs_error_rad": 0.8885930116189992,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_t0.300.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_t0.750.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_t1.200.png"
+  ],
+  "video": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_video.gif",
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\outputs\\mujoco_sdas\\gui_run\\mujoco_fmas_five_finger_transparent_sphere.xml"
+}

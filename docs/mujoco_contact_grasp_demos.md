@@ -86,12 +86,95 @@
 
 ## Demo 命令
 
+### 图形化入口
+
+如果不希望通过终端参数操作，可以打开 PyQt 图形界面：
+
+```powershell
+python scripts\run_mujoco_sdas_gui.py
+```
+
+界面中可以直接完成以下操作：
+
+| 区域 | 功能 |
+|---|---|
+| Simulation File | 选择 `.ohd` 文件和输出目录 |
+| Analysis Steps | 设置仿真总时长和分析步数，界面自动显示 `dt` |
+| Grasp Object and Contact | 选择 `keep/none/box/cylinder/sphere/scanned_mug`，设置物体位置、尺寸、质量、是否固定、是否打开接触 |
+| Output | 选择是否导出过程 GIF、设置 GIF 帧率、是否保留逐帧 PNG |
+| Run MuJoCo Simulation | 启动数值仿真 |
+| Result Panel | 显示 summary JSON，预览截图或播放 GIF，打开输出目录 |
+
+这是当前推荐给普通用户的入口。CLI 仍保留给批量实验和自动化测试。
+
+### 直接运行已写好的 `.ohd`
+
 ```powershell
 python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_box.ohd"
 python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_cylinder.ohd"
 python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_sphere.ohd"
 python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_scanned_mug.ohd"
 ```
+
+### 通过终端覆盖分析步和抓取物品
+
+当前用户入口是命令行脚本：
+
+```powershell
+python scripts\run_mujoco_sdas.py <仿真或手部 .ohd 文件> [参数]
+```
+
+例如，用户选择基础 `.ohd`，设置总时长为 `1.0 s`、分析步数为 `500`，抓取物体选 cylinder，并指定输出目录：
+
+```powershell
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_step.ohd" --duration 1.0 --steps 500 --object cylinder --out outputs\mujoco_sdas\cli_cylinder_demo
+```
+
+这条命令会自动计算：
+
+```text
+dt = duration / steps = 1.0 / 500 = 0.002 s
+```
+
+可用参数：
+
+| 参数 | 作用 |
+|---|---|
+| `<ohd_file>` | 选择手部 `.ohd` 或仿真定义 `.ohd` |
+| `--duration 1.4` | 设置仿真总时长 |
+| `--steps 700` | 设置分析步数，自动换算 `dt` |
+| `--dt 0.002` | 直接设置 MuJoCo 时间步长；若同时给 `--steps`，以 `--steps` 为准 |
+| `--object keep` | 使用 `.ohd` 中已有物体，默认值 |
+| `--object none` | 不加入抓取物体 |
+| `--object box` | 加入 box 抓取物体 |
+| `--object cylinder` | 加入 cylinder 抓取物体 |
+| `--object sphere` | 加入 sphere 抓取物体 |
+| `--object scanned_mug` | 加入 vendored scanned mug 资产 |
+| `--object-pos X Y Z` | 覆盖物体初始位置 |
+| `--object-size ...` | 覆盖 procedural 物体尺寸 |
+| `--object-scale S` | 覆盖 scanned object 缩放 |
+| `--object-mass M` | 覆盖物体质量 |
+| `--fixed-object` | 物体不加 freejoint，用作固定测试件 |
+| `--contact` | 即使 `.ohd` 没有 contact 字段，也强制打开接触 |
+| `--out DIR` | 设置输出目录 |
+| `--video` | 输出仿真过程 GIF |
+| `--video-fps 12` | 设置 GIF 帧率 |
+| `--keep-video-frames` | 保留中间帧 PNG，默认合成后删除 |
+
+更多例子：
+
+```powershell
+# 选择 sphere，使用 700 个分析步
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_step.ohd" --duration 1.4 --steps 700 --object sphere --out outputs\mujoco_sdas\manual_sphere
+
+# 选择 scanned mug，并调整缩放和位置
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_step.ohd" --duration 1.4 --steps 700 --object scanned_mug --object-scale 0.45 --object-pos 0.045 0.125 0.0785 --video --video-fps 12 --out outputs\mujoco_sdas\manual_mug
+
+# 使用 .ohd 内定义的物体，但只覆盖分析步数
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_cylinder.ohd" --steps 700
+```
+
+目前没有单独的 GUI；如果需要图形化入口，建议下一步做一个 PyQt launcher：左侧选择 `.ohd`，中间设置 `duration/steps/object`，右侧显示输出截图和 summary。
 
 ## 结果汇总
 
@@ -133,6 +216,22 @@ CSV/NPZ 中新增：
 | `contact_steps` | 出现接触的仿真步数 |
 | `max_contacts` | 单步最大接触点数量 |
 | `max_contact_force` | 单步最大总接触力 |
+| `video` | 过程 GIF 路径；未开启视频时为 `null` |
+
+## 过程视频
+
+默认输出只有关键时刻截图，不生成视频。需要视频时加：
+
+```powershell
+python scripts\run_mujoco_sdas.py "models\ohd test\mujoco_sdas_grasp_scanned_mug.ohd" --video --video-fps 12
+```
+
+已生成的示例过程 GIF：
+
+```text
+outputs/mujoco_sdas/grasp_scanned_mug/mujoco_sdas_grasp_scanned_mug_video.gif
+outputs/mujoco_sdas/cli_cylinder_video/mujoco_sdas_step_video.gif
+```
 
 ## 当前解释边界
 

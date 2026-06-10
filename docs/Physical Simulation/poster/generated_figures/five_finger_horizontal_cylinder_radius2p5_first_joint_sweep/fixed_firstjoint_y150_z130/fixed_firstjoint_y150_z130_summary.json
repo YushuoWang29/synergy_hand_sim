@@ -1,0 +1,25 @@
+{
+  "duration": 1.2,
+  "dt": 0.002,
+  "steps": 600,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 601,
+  "max_contacts": 41,
+  "max_contact_force": 2.0294866663114716e+41,
+  "rms_error_rad": 162799430361695.66,
+  "max_abs_error_rad": 1.3825495416224398e+16,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_t0.300.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_t0.750.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_t1.200.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_first_joint_sweep\\fixed_firstjoint_y150_z130\\fixed_firstjoint_y150_z130.xml"
+}

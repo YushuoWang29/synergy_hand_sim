@@ -1,0 +1,26 @@
+{
+  "duration": 1.2,
+  "dt": 0.002,
+  "steps": 600,
+  "joint_count": 15,
+  "driver_count": 2,
+  "distribution": "sdas",
+  "object_count": 1,
+  "contact_enabled": true,
+  "contact_steps": 601,
+  "max_contacts": 53,
+  "max_contact_force": 6.09659306135281e+17,
+  "rms_error_rad": 5.911431990230441,
+  "max_abs_error_rad": 22.96539465385316,
+  "screenshots": [
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_t0.200.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_t0.550.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_t0.900.png",
+    "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_t1.150.png"
+  ],
+  "video": null,
+  "log_csv": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_log.csv",
+  "log_npz": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_log.npz",
+  "comparison_png": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050_geometry_vs_mujoco.png",
+  "mjcf": "E:\\SGLab\\cable-driven\\synergy_hand_sim\\docs\\Physical Simulation\\poster\\generated_figures\\five_finger_horizontal_cylinder_radius2p5_fixed_trials_lower\\fixed_y180_z045_r050\\fixed_y180_z045_r050.xml"
+}
